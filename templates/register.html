@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Create Account — DURJOY FX{% endblock %}
+
+{% block content %}
+
+<div class="auth-page">
+
+<div class="auth-card">
+
+<span class="eyebrow">DURJOY FX</span>
+
+<h1>Create your account</h1>
+
+<p>Build your professional trading workspace.</p>
+
+<form method="POST">
+
+<label>Username</label>
+<input name="username" placeholder="Your username" required>
+
+<label>Email</label>
+<input type="email" name="email" placeholder="you@example.com" required>
+
+<label>Password</label>
+<input type="password" name="password" placeholder="Minimum 6 characters" required>
+
+<button class="primary-btn full">Create Account</button>
+
+</form>
+
+<p class="auth-link">
+Already have an account?
+<a href="{{ url_for('login') }}">Login</a>
+</p>
+
+</div>
+
+</div>
+
+{% endblock %}

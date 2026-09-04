@@ -1,0 +1,576 @@
+import os, sqlite3, secrets
+from datetime import datetime, timedelta
+from functools import wraps
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify, flash
+from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
+
+BASE = os.path.abspath(os.path.dirname(__file__))
+DB = os.path.join(BASE, "database", "fxchart.db")
+UPLOAD_DIR = os.path.join(BASE, "static", "uploads")
+os.makedirs(os.path.dirname(DB), exist_ok=True)
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+app = Flask(__name__)
+app.secret_key = os.environ.get("FXCHART_SECRET_KEY", secrets.token_hex(32))
+app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024
+ALLOWED = {"png", "jpg", "jpeg", "webp", "gif"}
+
+def db():
+    con = sqlite3.connect(DB)
+    con.row_factory = sqlite3.Row
+    return con
+
+def init_db():
+    con = db()
+    con.executescript("""
+    CREATE TABLE IF NOT EXISTS users(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT UNIQUE NOT NULL,
+      email TEXT UNIQUE NOT NULL,
+      password TEXT NOT NULL,
+      full_name TEXT DEFAULT '',
+      bio TEXT DEFAULT '',
+      experience TEXT DEFAULT '',
+      trading_style TEXT DEFAULT '',
+      favorite_market TEXT DEFAULT '',
+      favorite_pairs TEXT DEFAULT '',
+      strategy TEXT DEFAULT '',
+      hobbies TEXT DEFAULT '',
+      location TEXT DEFAULT '',
+      website TEXT DEFAULT '',
+      education TEXT DEFAULT '',
+      achievements TEXT DEFAULT '',
+      goals TEXT DEFAULT '',
+      photo TEXT DEFAULT '',
+      role TEXT DEFAULT 'user',
+      plan TEXT DEFAULT 'free',
+      subscription_status TEXT DEFAULT 'inactive',
+      subscription_start TEXT DEFAULT '',
+      subscription_end TEXT DEFAULT '',
+      created_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS social_links(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      platform TEXT NOT NULL,
+      url TEXT NOT NULL,
+      UNIQUE(user_id, platform),
+      FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS trades(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      symbol TEXT,
+      side TEXT,
+      entry REAL,
+      stop_loss REAL,
+      take_profit REAL,
+      lot REAL,
+      pnl REAL DEFAULT 0,
+      notes TEXT DEFAULT '',
+      created_at TEXT NOT NULL,
+      FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS posts(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      title TEXT NOT NULL,
+      body TEXT NOT NULL,
+      post_type TEXT DEFAULT 'community',
+      created_at TEXT NOT NULL,
+      FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS comments(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      post_id INTEGER NOT NULL,
+      user_id INTEGER NOT NULL,
+      body TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY(post_id) REFERENCES posts(id) ON DELETE CASCADE,
+      FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS likes(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      post_id INTEGER NOT NULL,
+      user_id INTEGER NOT NULL,
+      UNIQUE(post_id,user_id),
+      FOREIGN KEY(post_id) REFERENCES posts(id) ON DELETE CASCADE,
+      FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS courses(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      level TEXT NOT NULL,
+      description TEXT NOT NULL,
+      lessons INTEGER DEFAULT 0,
+      created_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS lessons(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      course_id INTEGER NOT NULL,
+      title TEXT NOT NULL,
+      content TEXT NOT NULL,
+      sort_order INTEGER DEFAULT 0,
+      FOREIGN KEY(course_id) REFERENCES courses(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS live_classes(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      description TEXT DEFAULT '',
+      meeting_url TEXT DEFAULT '',
+      start_at TEXT NOT NULL,
+      instructor_id INTEGER NOT NULL,
+      plan_required TEXT DEFAULT 'free',
+      FOREIGN KEY(instructor_id) REFERENCES users(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS subscriptions(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      plan TEXT NOT NULL,
+      status TEXT NOT NULL,
+      start_at TEXT NOT NULL,
+      end_at TEXT NOT NULL,
+      payment_reference TEXT DEFAULT '',
+      created_at TEXT NOT NULL,
+      FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS broker_connections(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      broker TEXT NOT NULL,
+      label TEXT DEFAULT '',
+      account_reference TEXT DEFAULT '',
+      status TEXT DEFAULT 'saved',
+      created_at TEXT NOT NULL,
+      FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS follows(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      follower_id INTEGER NOT NULL,
+      following_id INTEGER NOT NULL,
+      UNIQUE(follower_id,following_id)
+    );
+    """)
+
+    # First account becomes owner/admin.
+    owner = con.execute("SELECT id FROM users ORDER BY id LIMIT 1").fetchone()
+    if owner:
+        con.execute("UPDATE users SET role='owner' WHERE id=?", (owner["id"],))
+
+    count = con.execute("SELECT COUNT(*) c FROM courses").fetchone()["c"]
+    if count == 0:
+        courses = [
+          ("Forex Fundamentals: Zero to Trader","Beginner","Market basics, pairs, pips, spread, leverage, sessions, orders and risk.",10),
+          ("Candlestick Mastery","Beginner","Major candle names, structure, psychology and practical chart reading.",12),
+          ("Technical Analysis","Intermediate","Support/resistance, trend, structure, patterns and multi-timeframe analysis.",14),
+          ("SMC & Price Action","Advanced","Liquidity, BOS, CHOCH/MSS, FVG, order blocks and execution models.",18),
+          ("Risk Management & Psychology","Advanced","Position sizing, risk/reward, drawdown, discipline and trading psychology.",10),
+          ("Multi-Timeframe Analysis","Advanced","Top-down analysis from higher timeframe bias to lower timeframe execution.",12),
+          ("Advanced Execution","Advanced","Entry models, confluence, invalidation, backtesting and building a repeatable plan.",16),
+        ]
+        for c in courses:
+            cur = con.execute("INSERT INTO courses(title,level,description,lessons,created_at) VALUES(?,?,?,?,?)",
+                              (*c, datetime.utcnow().isoformat()))
+            cid = cur.lastrowid
+            lesson_titles = {
+              "Forex Fundamentals: Zero to Trader":[
+                "What is Forex?","Currency pairs","Pips and points","Bid/ask and spread",
+                "Market sessions","Market orders and pending orders","Leverage and margin",
+                "Risk per trade","Trading plan","First backtest"
+              ],
+              "Candlestick Mastery":[
+                "Candle anatomy","Doji","Hammer","Inverted hammer","Shooting star",
+                "Hanging man","Engulfing","Morning star","Evening star","Inside bar",
+                "Pin bar","How to read candle context"
+              ],
+              "Technical Analysis":[
+                "Trend and range","Swing highs/lows","Support","Resistance","Trendlines",
+                "Breakout vs fakeout","Chart patterns","Volume context","Entry confirmation",
+                "Invalidation","Targets","Trade review","Backtesting","Building confluence"
+              ],
+              "SMC & Price Action":[
+                "Liquidity","Liquidity sweep","BOS","CHOCH/MSS","FVG","Order blocks",
+                "Premium and discount","Displacement","Inducement","Mitigation",
+                "Entry model","Stop placement","Target liquidity","Confluence","Session bias",
+                "Execution","Trade management","Review"
+              ],
+              "Risk Management & Psychology":[
+                "Fixed risk","Position sizing","Risk/reward","Daily loss limit","Drawdown",
+                "Overtrading","Revenge trading","FOMO","Discipline","Trading journal"
+              ],
+              "Multi-Timeframe Analysis":[
+                "Top-down framework","Monthly context","Weekly bias","Daily structure",
+                "4H structure","1H confirmation","15m execution","5m execution",
+                "Alignment","Conflicting timeframes","Session selection","Complete workflow"
+              ],
+              "Advanced Execution":[
+                "Define a setup","Entry trigger","Stop logic","Take-profit logic","Confluence",
+                "Backtesting","Forward testing","Expectancy","Win rate vs R multiple",
+                "Sample size","Playbook","A+ setup","No-trade conditions","Performance review",
+                "Scaling carefully","Building a professional routine"
+              ]
+            }
+            for i,t in enumerate(lesson_titles[c[0]],1):
+                con.execute("INSERT INTO lessons(course_id,title,content,sort_order) VALUES(?,?,?,?)",
+                            (cid,t, f"Study {t} carefully. Mark the conditions, invalidation and examples before moving to the next lesson.", i))
+    con.commit()
+    con.close()
+
+def current_user():
+    uid = session.get("user_id")
+    if not uid: return None
+    con = db()
+    u = con.execute("SELECT * FROM users WHERE id=?", (uid,)).fetchone()
+    con.close()
+    return u
+
+def login_required(fn):
+    @wraps(fn)
+    def wrapper(*a, **kw):
+        if not current_user():
+            flash("Please login first.","warning")
+            return redirect(url_for("login"))
+        return fn(*a, **kw)
+    return wrapper
+
+def instructor_required(fn):
+    @wraps(fn)
+    def wrapper(*a, **kw):
+        u = current_user()
+        if not u or (u["role"] != "owner" and u["plan"] == "free"):
+            flash("Only subscribers/instructors and the website owner can publish learning content.","warning")
+            return redirect(url_for("learning"))
+        return fn(*a, **kw)
+    return wrapper
+
+@app.context_processor
+def ctx():
+    return {"me": current_user(), "now": datetime.utcnow().isoformat()}
+
+@app.route("/")
+def index():
+    con=db()
+    posts=con.execute("""SELECT p.*,u.username,u.full_name,u.photo,
+                         (SELECT COUNT(*) FROM likes l WHERE l.post_id=p.id) likes
+                         FROM posts p JOIN users u ON u.id=p.user_id
+                         ORDER BY p.id DESC LIMIT 8""").fetchall()
+    courses=con.execute("SELECT * FROM courses ORDER BY id").fetchall()
+    con.close()
+    return render_template("home.html", posts=posts, courses=courses)
+
+@app.route("/register", methods=["GET","POST"])
+def register():
+    if request.method=="POST":
+        username=request.form.get("username","").strip()
+        email=request.form.get("email","").strip().lower()
+        password=request.form.get("password","")
+        if len(username)<3 or len(password)<6:
+            flash("Username must be 3+ characters and password 6+ characters.","warning")
+            return redirect(url_for("register"))
+        con=db()
+        try:
+            role = "owner" if con.execute("SELECT COUNT(*) c FROM users").fetchone()["c"]==0 else "user"
+            con.execute("""INSERT INTO users(username,email,password,role,created_at)
+                           VALUES(?,?,?,?,?)""",
+                        (username,email,generate_password_hash(password),role,datetime.utcnow().isoformat()))
+            con.commit()
+            flash("Account created. Now login.","success")
+            return redirect(url_for("login"))
+        except sqlite3.IntegrityError:
+            flash("Username or email already exists.","warning")
+        finally: con.close()
+    return render_template("auth.html", mode="register")
+
+@app.route("/login", methods=["GET","POST"])
+def login():
+    if request.method=="POST":
+        ident=request.form.get("identity","").strip().lower()
+        password=request.form.get("password","")
+        con=db()
+        u=con.execute("SELECT * FROM users WHERE lower(username)=? OR lower(email)=?",(ident,ident)).fetchone()
+        con.close()
+        if u and check_password_hash(u["password"],password):
+            session["user_id"]=u["id"]
+            return redirect(url_for("dashboard"))
+        flash("Invalid login details.","warning")
+    return render_template("auth.html", mode="login")
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("index"))
+
+@app.route("/dashboard")
+@login_required
+def dashboard():
+    u=current_user(); con=db()
+    stats=con.execute("""SELECT COUNT(*) trades,
+                         COALESCE(SUM(pnl),0) pnl,
+                         COALESCE(SUM(CASE WHEN pnl>0 THEN 1 ELSE 0 END),0) wins
+                         FROM trades WHERE user_id=?""",(u["id"],)).fetchone()
+    con.close()
+    return render_template("dashboard.html", stats=stats)
+
+@app.route("/chart")
+def chart():
+    return render_template("chart.html")
+
+@app.route("/analytics")
+@login_required
+def analytics():
+    con=db()
+    s=con.execute("""SELECT COUNT(*) total,
+                     COALESCE(SUM(pnl),0) pnl,
+                     COALESCE(AVG(pnl),0) avg_pnl,
+                     COALESCE(SUM(CASE WHEN pnl>0 THEN 1 ELSE 0 END),0) wins
+                     FROM trades WHERE user_id=?""",(session["user_id"],)).fetchone()
+    con.close()
+    winrate=(s["wins"]/s["total"]*100) if s["total"] else 0
+    return render_template("analytics.html", stats=s, winrate=winrate)
+
+@app.route("/journal", methods=["GET","POST"])
+@login_required
+def journal():
+    con=db()
+    if request.method=="POST":
+        con.execute("""INSERT INTO trades(user_id,symbol,side,entry,stop_loss,take_profit,lot,pnl,notes,created_at)
+                       VALUES(?,?,?,?,?,?,?,?,?,?)""",
+                    (session["user_id"],request.form.get("symbol",""),request.form.get("side",""),
+                     float(request.form.get("entry") or 0),float(request.form.get("stop_loss") or 0),
+                     float(request.form.get("take_profit") or 0),float(request.form.get("lot") or 0),
+                     float(request.form.get("pnl") or 0),request.form.get("notes",""),datetime.utcnow().isoformat()))
+        con.commit(); flash("Trade saved.","success")
+    trades=con.execute("SELECT * FROM trades WHERE user_id=? ORDER BY id DESC LIMIT 100",(session["user_id"],)).fetchall()
+    con.close()
+    return render_template("journal.html",trades=trades)
+
+@app.route("/profile")
+@login_required
+def profile():
+    u=current_user(); con=db()
+    socials=con.execute("SELECT * FROM social_links WHERE user_id=? ORDER BY platform",(u["id"],)).fetchall()
+    con.close()
+    return render_template("profile.html", user=u, socials=socials)
+
+@app.route("/profile/update", methods=["POST"])
+@login_required
+def profile_update():
+    u=current_user()
+    data={k:request.form.get(k,"").strip() for k in [
+      "full_name","bio","experience","trading_style","favorite_market","favorite_pairs",
+      "strategy","hobbies","location","website","education","achievements","goals"
+    ]}
+    photo=u["photo"]
+    f=request.files.get("photo")
+    if f and f.filename:
+        ext=f.filename.rsplit(".",1)[-1].lower()
+        if ext not in ALLOWED:
+            flash("Only PNG/JPG/JPEG/WEBP/GIF images are allowed.","warning")
+            return redirect(url_for("profile"))
+        name=f"user_{u['id']}_{secrets.token_hex(6)}.{ext}"
+        f.save(os.path.join(UPLOAD_DIR,secure_filename(name)))
+        photo="/static/uploads/"+name
+    con=db()
+    con.execute("""UPDATE users SET full_name=?,bio=?,experience=?,trading_style=?,favorite_market=?,
+                   favorite_pairs=?,strategy=?,hobbies=?,location=?,website=?,education=?,achievements=?,goals=?,photo=?
+                   WHERE id=?""",
+                (*[data[k] for k in ["full_name","bio","experience","trading_style","favorite_market","favorite_pairs",
+                                      "strategy","hobbies","location","website","education","achievements","goals"]],
+                 photo,u["id"]))
+    con.commit(); con.close()
+    flash("Profile updated.","success")
+    return redirect(url_for("profile"))
+
+@app.route("/profile/social", methods=["POST"])
+@login_required
+def social_save():
+    platform=request.form.get("platform","").strip()
+    url=request.form.get("url","").strip()
+    if not platform or not url:
+        flash("Platform and URL are required.","warning"); return redirect(url_for("profile"))
+    con=db()
+    con.execute("""INSERT INTO social_links(user_id,platform,url) VALUES(?,?,?)
+                   ON CONFLICT(user_id,platform) DO UPDATE SET url=excluded.url""",
+                (session["user_id"],platform,url))
+    con.commit(); con.close()
+    flash("Social account saved.","success")
+    return redirect(url_for("profile"))
+
+@app.route("/learning")
+def learning():
+    con=db()
+    courses=con.execute("SELECT * FROM courses ORDER BY id").fetchall()
+    classes=con.execute("""SELECT lc.*,u.username,u.full_name FROM live_classes lc
+                           JOIN users u ON u.id=lc.instructor_id ORDER BY lc.start_at DESC""").fetchall()
+    con.close()
+    return render_template("learning.html",courses=courses,classes=classes)
+
+@app.route("/learning/course/<int:cid>")
+def course(cid):
+    con=db()
+    c=con.execute("SELECT * FROM courses WHERE id=?",(cid,)).fetchone()
+    lessons=con.execute("SELECT * FROM lessons WHERE course_id=? ORDER BY sort_order",(cid,)).fetchall()
+    con.close()
+    if not c: return "Course not found",404
+    return render_template("course.html",course=c,lessons=lessons)
+
+@app.route("/learning/publish", methods=["GET","POST"])
+@login_required
+@instructor_required
+def publish_learning():
+    if request.method=="POST":
+        title=request.form.get("title","").strip()
+        body=request.form.get("body","").strip()
+        if title and body:
+            con=db()
+            con.execute("INSERT INTO posts(user_id,title,body,post_type,created_at) VALUES(?,?,?,?,?)",
+                        (session["user_id"],title,body,"learning",datetime.utcnow().isoformat()))
+            con.commit(); con.close()
+            flash("Learning post published.","success")
+            return redirect(url_for("learning"))
+    return render_template("publish.html")
+
+@app.route("/community", methods=["GET","POST"])
+@login_required
+def community():
+    if request.method=="POST":
+        title=request.form.get("title","").strip(); body=request.form.get("body","").strip()
+        if title and body:
+            con=db()
+            con.execute("INSERT INTO posts(user_id,title,body,post_type,created_at) VALUES(?,?,?,?,?)",
+                        (session["user_id"],title,body,"community",datetime.utcnow().isoformat()))
+            con.commit(); con.close()
+    con=db()
+    posts=con.execute("""SELECT p.*,u.username,u.full_name,u.photo,
+                         (SELECT COUNT(*) FROM likes l WHERE l.post_id=p.id) likes
+                         FROM posts p JOIN users u ON u.id=p.user_id
+                         ORDER BY p.id DESC LIMIT 50""").fetchall()
+    con.close()
+    return render_template("community.html",posts=posts)
+
+@app.post("/community/like/<int:pid>")
+@login_required
+def like(pid):
+    con=db()
+    try:
+        con.execute("INSERT INTO likes(post_id,user_id) VALUES(?,?)",(pid,session["user_id"]))
+    except sqlite3.IntegrityError:
+        con.execute("DELETE FROM likes WHERE post_id=? AND user_id=?",(pid,session["user_id"]))
+    con.commit()
+    n=con.execute("SELECT COUNT(*) c FROM likes WHERE post_id=?",(pid,)).fetchone()["c"]
+    con.close()
+    return jsonify({"likes":n})
+
+@app.post("/community/comment/<int:pid>")
+@login_required
+def comment(pid):
+    body=request.form.get("body","").strip()
+    if body:
+        con=db()
+        con.execute("INSERT INTO comments(post_id,user_id,body,created_at) VALUES(?,?,?,?)",
+                    (pid,session["user_id"],body,datetime.utcnow().isoformat()))
+        con.commit(); con.close()
+    return redirect(url_for("community"))
+
+@app.route("/subscriptions")
+@login_required
+def subscriptions():
+    con=db()
+    history=con.execute("SELECT * FROM subscriptions WHERE user_id=? ORDER BY id DESC",(session["user_id"],)).fetchall()
+    con.close()
+    return render_template("subscriptions.html",history=history)
+
+@app.post("/subscriptions/request")
+@login_required
+def subscription_request():
+    plan=request.form.get("plan","pro")
+    days=30 if plan=="pro" else 90
+    start=datetime.utcnow(); end=start+timedelta(days=days)
+    con=db()
+    con.execute("""INSERT INTO subscriptions(user_id,plan,status,start_at,end_at,created_at)
+                   VALUES(?,?,?,?,?,?)""",
+                (session["user_id"],plan,"pending",start.isoformat(),end.isoformat(),start.isoformat()))
+    con.commit(); con.close()
+    flash("Subscription request created. Payment gateway can be connected next through the provider credentials.","success")
+    return redirect(url_for("subscriptions"))
+
+@app.route("/brokers", methods=["GET","POST"])
+@login_required
+def brokers():
+    con=db()
+    if request.method=="POST":
+        con.execute("""INSERT INTO broker_connections(user_id,broker,label,account_reference,status,created_at)
+                       VALUES(?,?,?,?,?,?)""",
+                    (session["user_id"],request.form.get("broker",""),request.form.get("label",""),
+                     request.form.get("account_reference",""),"saved",datetime.utcnow().isoformat()))
+        con.commit()
+        flash("Broker connection profile saved. Actual trading/API access requires that broker's official API credentials and permissions.","success")
+    items=con.execute("SELECT * FROM broker_connections WHERE user_id=? ORDER BY id DESC",(session["user_id"],)).fetchall()
+    con.close()
+    return render_template("brokers.html",items=items)
+
+@app.route("/calculator")
+def calculator():
+    return render_template("calculator.html")
+
+
+@app.route("/calendar")
+def calendar():
+    return render_template("calendar.html")
+
+@app.route("/learning/reference")
+def learning_reference():
+    return render_template("reference.html")
+
+@app.route("/settings")
+@login_required
+def settings():
+    return render_template("settings.html")
+
+@app.route("/news")
+def news():
+    return render_template("news.html")
+
+@app.route("/api/help", methods=["POST"])
+def help_api():
+    q=request.json.get("message","").lower()
+    answers=[
+      (("profile","bio","photo","social","avatar"),"Profile → Edit Profile থেকে photo, bio, experience, strategy, hobbies, education, goals এবং social accounts যোগ করতে পারবে. Photo না এলে JPG/PNG/WEBP এবং 5MB-এর মধ্যে রাখো."),
+      (("learning","course","lesson","candle","candlestick","pattern","support","resistance","smc","mtf","timeframe"),"Learning Center-এ Beginner → Advanced roadmap, Candlestick & Chart Reference, Technical Analysis, SMC, Risk Management এবং Multi-Timeframe Analysis আছে. Reference পেজ থেকে copy ও A4 print করা যায়."),
+      (("broker","binance","mt5","exness","xm"),"Brokers পেজে broker account profile save করা যায়. আসল order execution/API চালাতে broker-এর official API credentials, permissions এবং secure server integration দরকার."),
+      (("chart","live","candle","market","forex","stock","crypto","gold","index"),"Chart পেজে Forex, Stocks, Crypto, Indices ও Commodities-এর preset symbols এবং 1m থেকে 1M পর্যন্ত timeframe দেওয়া আছে. Fullscreen দিয়ে বড় করে chart দেখা যায়."),
+      (("subscription","subscribe","premium","pro"),"Subscriptions পেজ থেকে plan request করা যায়. Real payment চালু করতে payment gateway credentials/API এবং server-side verification প্রয়োজন."),
+      (("analytics","analysis","win rate","pnl"),"Analytics তোমার Journal-এর recorded trades থেকে total trades, win rate, P/L এবং average P/L দেখায়."),
+      (("news","calendar","high impact","medium impact","low impact","nfp","fomc","cpi"),"News পেজে TradingView Top Stories এবং Economic Calendar রাখা হয়েছে. Calendar-এ country, period, importance ও category অনুযায়ী filter করা যায়."),
+      (("community","post","comment","like"),"Community-তে professional feed, market/topic filters, posts, likes, comments এবং learning-post publishing access আছে."),
+      (("theme","dark","soft","appearance","settings"),"Profile-এর 3-dot menu বা Settings থেকে Soft, Pro, Midnight এবং Ocean theme বেছে নিতে পারবে. পছন্দটি browser-এ save থাকবে."),
+    ]
+    for keys,ans in answers:
+        if any(k in q for k in keys): return jsonify({"answer":ans})
+    return jsonify({"answer":"আমি FX CHART Help Assistant. Chart, Market, Timeframe, Learning, Candles, Patterns, SMC, MTF, Risk, Profile, Community, News, Calendar, Broker, Subscription, Journal বা Analytics নিয়ে প্রশ্ন করো."})
+
+@app.get("/health")
+def health():
+    return jsonify({"status":"ok","app":"FX CHART","db":os.path.exists(DB)})
+
+@app.errorhandler(413)
+def too_large(e):
+    flash("Image/file is too large. Maximum 5MB.","warning")
+    return redirect(url_for("profile"))
+
+init_db()
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT",5000)), debug=False)

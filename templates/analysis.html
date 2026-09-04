@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Chart Analysis — DURJOY FX{% endblock %}
+
+{% block content %}
+
+<div class="page-head">
+
+<div>
+<span class="eyebrow">MARKET ANALYSIS</span>
+<h1>Chart Analysis Workspace</h1>
+<p>SMC এবং technical analysis-এর জন্য তোমার workspace.</p>
+</div>
+
+</div>
+
+
+<div class="chart-panel">
+
+<div class="chart-toolbar">
+
+<button onclick="addLine()">Horizontal Line</button>
+<button onclick="addNote()">Add Note</button>
+<button onclick="clearChart()">Clear</button>
+
+<select>
+<option>EURUSD</option>
+<option>GBPUSD</option>
+<option>XAUUSD</option>
+<option>USDJPY</option>
+<option>BTCUSD</option>
+</select>
+
+<select>
+<option>1M</option>
+<option>5M</option>
+<option>15M</option>
+<option>1H</option>
+<option>4H</option>
+<option>1D</option>
+</select>
+
+</div>
+
+
+<div id="analysisCanvas" class="analysis-canvas">
+
+<div class="candles">
+
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+
+</div>
+
+<div class="analysis-message">
+CHART WORKSPACE
+</div>
+
+</div>
+
+</div>
+
+
+<div class="smc-grid">
+
+<div class="smc-card">
+<strong>Liquidity</strong>
+<span>Mark liquidity zones</span>
+</div>
+
+<div class="smc-card">
+<strong>Order Block</strong>
+<span>Identify institutional zones</span>
+</div>
+
+<div class="smc-card">
+<strong>Fair Value Gap</strong>
+<span>Mark FVG areas</span>
+</div>
+
+<div class="smc-card">
+<strong>Market Structure</strong>
+<span>BOS / CHOCH / MSS</span>
+</div>
+
+<div class="smc-card">
+<strong>Premium / Discount</strong>
+<span>Analyze dealing range</span>
+</div>
+
+<div class="smc-card">
+<strong>Entry Model</strong>
+<span>Entry / SL / TP planning</span>
+</div>
+
+</div>
+
+{% endblock %}

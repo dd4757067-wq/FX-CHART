@@ -1,0 +1,7 @@
+{% extends "base.html" %}{% block title %}Journal — FX CHART{% endblock %}
+{% block content %}<h1>Trading Journal</h1><form class="card formgrid" method="post">
+<label>Symbol<input name="symbol" placeholder="EURUSD"></label><label>Side<select name="side"><option>BUY</option><option>SELL</option></select></label>
+<label>Entry<input name="entry" type="number" step="any"></label><label>Stop Loss<input name="stop_loss" type="number" step="any"></label>
+<label>Take Profit<input name="take_profit" type="number" step="any"></label><label>Lot<input name="lot" type="number" step="any"></label>
+<label>P/L<input name="pnl" type="number" step="any"></label><label>Notes<input name="notes"></label><button class="btn primary">Save Trade</button></form>
+<div class="card table"><table><tr><th>Symbol</th><th>Side</th><th>Entry</th><th>SL</th><th>TP</th><th>P/L</th></tr>{% for t in trades %}<tr><td>{{t.symbol}}</td><td>{{t.side}}</td><td>{{t.entry}}</td><td>{{t.stop_loss}}</td><td>{{t.take_profit}}</td><td>{{t.pnl}}</td></tr>{% endfor %}</table></div>{% endblock %}

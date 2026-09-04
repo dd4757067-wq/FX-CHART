@@ -1,0 +1,4 @@
+{% extends "base.html" %}{% block title %}{{course.title}} — FX CHART{% endblock %}
+{% block content %}<div class="sectionHead"><div><span class="pill">{{course.level}}</span><h1>{{course.title}}</h1><p>{{course.description}}</p></div><a class="btn" href="{{url_for('learning_reference')}}">📄 Reference</a></div>
+<div class="lessonList">{% for l in lessons %}<article class="lessonCard card"><div class="lessonNo">{{loop.index}}</div><div><h2>{{l.title}}</h2><p>{{l.content}}</p></div></article>{% endfor %}</div>
+<div class="printActions"><button class="btn primary" onclick="window.print()">🖨 Print / Save PDF</button><button class="btn" onclick="copyText(document.querySelector('.lessonList').innerText)">Copy lessons</button></div>{% endblock %}

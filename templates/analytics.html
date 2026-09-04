@@ -1,0 +1,4 @@
+{% extends "base.html" %}{% block title %}Analytics — FX CHART{% endblock %}
+{% block content %}<div class="sectionHead"><h1>Trading Analytics</h1><a class="btn" href="{{url_for('journal')}}">Open Journal</a></div>
+<div class="grid4"><div class="metric"><span>Total trades</span><b>{{stats.total}}</b></div><div class="metric"><span>Win rate</span><b>{{"%.1f"|format(winrate)}}%</b></div><div class="metric"><span>Total P/L</span><b>{{"%.2f"|format(stats.pnl)}}</b></div><div class="metric"><span>Average P/L</span><b>{{"%.2f"|format(stats.avg_pnl)}}</b></div></div>
+<div class="card"><h2>How to use analytics</h2><p>Log enough trades in Journal first. Analytics then summarizes your actual recorded results. Do not treat statistics as a guarantee of future profitability.</p></div>{% endblock %}

@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}DURJOY FX — Professional Trading Platform{% endblock %}
+
+{% block content %}
+
+<section class="hero">
+
+<div class="hero-content">
+
+<div class="badge">NEXT GENERATION TRADING PLATFORM</div>
+
+<h1>
+Trade Smarter.<br>
+<span>Analyze Better.</span>
+</h1>
+
+<p>
+একটি professional workspace যেখানে তুমি Trading Journal,
+Risk Management, Analytics, Chart Analysis এবং Trading Psychology
+এক জায়গায় manage করতে পারবে।
+</p>
+
+<div class="hero-actions">
+<a class="primary-btn" href="{{ url_for('register') }}">
+Create Free Account
+</a>
+
+<a class="secondary-btn" href="{{ url_for('login') }}">
+Login
+</a>
+</div>
+
+</div>
+
+<div class="hero-card">
+
+<div class="mini-label">TRADING PERFORMANCE</div>
+
+<div class="mock-number">+24.68%</div>
+
+<div class="mock-chart">
+<div></div><div></div><div></div><div></div>
+<div></div><div></div><div></div><div></div>
+</div>
+
+<div class="mock-stats">
+
+<div>
+<span>Win Rate</span>
+<strong>72.4%</strong>
+</div>
+
+<div>
+<span>Profit Factor</span>
+<strong>2.18</strong>
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+
+<section class="section">
+
+<div class="section-heading">
+
+<div>
+<span class="eyebrow">POWERFUL TOOLS</span>
+<h2>Everything a trader needs</h2>
+</div>
+
+<p>
+Build discipline, track performance and understand your trading data.
+</p>
+
+</div>
+
+
+<div class="feature-grid">
+
+<div class="feature-card">
+<div class="feature-icon">📒</div>
+<h3>Trading Journal</h3>
+<p>প্রতিটি trade বিস্তারিতভাবে record ও analyze করো।</p>
+</div>
+
+<div class="feature-card">
+<div class="feature-icon">📊</div>
+<h3>Performance Analytics</h3>
+<p>Win rate, P/L, profit factor এবং trading statistics দেখো।</p>
+</div>
+
+<div class="feature-card">
+<div class="feature-icon">🧮</div>
+<h3>Risk Calculator</h3>
+<p>Risk, position size এবং R:R দ্রুত calculate করো।</p>
+</div>
+
+<div class="feature-card">
+<div class="feature-icon">📈</div>
+<h3>Chart Workspace</h3>
+<p>Technical এবং SMC analysis-এর জন্য dedicated workspace।</p>
+</div>
+
+<div class="feature-card">
+<div class="feature-icon">🧠</div>
+<h3>Trading Psychology</h3>
+<p>Emotion, mistake এবং discipline track করো।</p>
+</div>
+
+<div class="feature-card">
+<div class="feature-icon">📅</div>
+<h3>Trading Calendar</h3>
+<p>দিন, সপ্তাহ এবং মাস অনুযায়ী performance দেখো।</p>
+</div>
+
+</div>
+
+</section>
+
+
+<section class="quote">
+
+<h2>
+Your edge is not one trade.<br>
+Your edge is your process.
+</h2>
+
+<p>DURJOY FX</p>
+
+</section>
+
+{% endblock %}
