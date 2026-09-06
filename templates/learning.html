@@ -1,1 +1,87 @@
-{% extends "base.html" %}{% block title %}Learning Lab — FX CHART{% endblock %}{% block content %}<section class="learning-hero"><span class="eyebrow">INTERACTIVE TRADING LAB</span><h1>Learn by <em>interaction.</em></h1><p>Tap a concept. It moves from the library into the focus stage, completes its formation animation, freezes in place and reveals the explanation automatically.</p></section><div class="learning-tabs"><button class="learn-tab active" data-target="candles">Candlesticks</button><button class="learn-tab" data-target="patterns">Chart Patterns</button><button class="learn-tab" data-target="smc">SMC</button><button class="learn-tab" data-target="mtf">MTF Analysis</button><button class="learn-tab" data-target="roadmap">Roadmap</button></div><section id="candles" class="learn-panel active"><div class="learning-selector"><div class="concept-library">{% for n in ['Bullish Engulfing','Bearish Engulfing','Doji','Hammer','Shooting Star','Morning Star','Evening Star','Pin Bar'] %}<button class="concept-card" data-candle="{{n}}"><span class="mini-candle"></span><b>{{n}}</b><small>Tap to focus</small></button>{% endfor %}</div><div class="focus-stage"><div class="focus-visual"><div class="focus-candle" id="focusCandle"><i></i><b></b></div><span id="focusLabel">Select a candle</span></div><div class="detail-card" id="candleDetail"><span class="eyebrow">CANDLE ANATOMY</span><h3>Choose a candlestick</h3><p>Open, high, low and close will be highlighted automatically after selection.</p></div></div></div></section><section id="patterns" class="learn-panel"><div class="concept-library pattern-library">{% for n in ['Ascending Triangle','Descending Triangle','Falling Wedge','Double Top'] %}<button class="concept-card pattern-card" data-pattern="{{n}}"><div class="pattern-preview"></div><b>{{n}}</b><small>Tap to replay formation</small></button>{% endfor %}</div><div class="focus-stage pattern-focus"><div class="formation-stage"><div class="formation-chart" id="formationChart">{% for i in range(18) %}<span style="--i:{{i}}"></span>{% endfor %}</div><div id="patternDetail" class="detail-card"><span class="eyebrow">PATTERN FORMATION</span><h3>Select a pattern</h3><p>The formation will animate outward and then stay stable while the explanation is shown.</p></div></div></div></section><section id="smc" class="learn-panel"><div class="concept-library smc-library">{% for n in ['Market Structure','Liquidity','Order Block','Fair Value Gap','Displacement','Breaker','Premium & Discount','Entry Model'] %}<button class="concept-card smc-card" data-smc="{{n}}"><span class="smc-icon">{{loop.index}}</span><b>{{n}}</b><small>Tap to focus</small></button>{% endfor %}</div><div class="focus-stage"><div class="smc-focus-visual"><div class="smc-flow-mini" id="smcFlow"><span>STRUCTURE</span><i>→</i><span>LIQUIDITY</span><i>→</i><span>DISPLACEMENT</span><i>→</i><span>CONFIRMATION</span></div></div><div class="detail-card" id="smcDetail"><span class="eyebrow">SMC PRACTICAL</span><h3>Select an SMC concept</h3><p>Each concept will explain what it is, why it matters, where it appears and how traders commonly use it.</p></div></div></section><section id="mtf" class="learn-panel"><div class="focus-stage"><div class="mtf-focus"><div class="mtf-node"><small>HTF</small><b>1D / 4H</b><span>Direction & context</span></div><i>→</i><div class="mtf-node"><small>MTF</small><b>1H / 15M</b><span>Structure & zone</span></div><i>→</i><div class="mtf-node"><small>LTF</small><b>5M / 1M</b><span>Entry confirmation</span></div></div><div class="detail-card"><span class="eyebrow">MULTI-TIMEFRAME ANALYSIS</span><h3>Context → Setup → Execution</h3><p>Click each timeframe node to bring it forward and show its role. The animation ends in a stable three-layer model.</p></div></div></section><section id="roadmap" class="learn-panel"><div class="roadmap"><button class="road-step" data-road="1"><b>01</b><span>Foundation</span><small>Market basics, candles, terminology and chart navigation.</small></button><button class="road-step" data-road="2"><b>02</b><span>Technical Analysis</span><small>Structure, support/resistance and pattern recognition.</small></button><button class="road-step" data-road="3"><b>03</b><span>SMC & MTF</span><small>Liquidity, displacement, FVG, OB and top-down analysis.</small></button><button class="road-step" data-road="4"><b>04</b><span>Execution & Risk</span><small>Risk model, journal, psychology and repeatable execution.</small></button></div><div class="road-detail" id="roadDetail"><span class="eyebrow">TRADER DEVELOPMENT ROADMAP</span><h3>Select a roadmap stage</h3><p>The selected stage will expand and reveal what to study, what to practice and what to avoid.</p></div></section><section class="courses-zone"><span class="eyebrow">COURSE LIBRARY</span><h2>Structured courses</h2><div class="course-grid">{% for c in courses %}<a class="course-card" href="{{url_for('course',cid=c.id)}}"><span>COURSE {{loop.index}}</span><h3>{{c.title}}</h3><p>{{c.description}}</p><b>Open course →</b></a>{% endfor %}</div></section>{% endblock %}
+{% extends "base.html" %}
+{% block title %}Learning • FX CHART{% endblock %}
+{% block content %}
+<section class="learning-shell">
+  <div class="learning-head">
+    <div><div class="eyebrow">FX CHART ACADEMY</div><h1>Structured Learning</h1><p class="muted">Select an item. Its formation animation plays, then the selected model stays stable while the bilingual explanation remains visible.</p></div>
+  </div>
+
+  <div class="learning-tabs">
+    <button class="learn-tab active" data-tab="candles">Candlesticks</button>
+    <button class="learn-tab" data-tab="patterns">Chart Patterns</button>
+    <button class="learn-tab" data-tab="smc">SMC</button>
+    <button class="learn-tab" data-tab="mtf">MTF</button>
+    <button class="learn-tab" data-tab="roadmap">Roadmap</button>
+    <button class="learn-tab" data-tab="courses">Course Library</button>
+  </div>
+
+  <div id="candles" class="learn-panel active">
+    <div class="learning-layout">
+      <div class="item-library candle-library">
+        {% for name in ['Bullish Engulfing','Bearish Engulfing','Doji','Hammer','Shooting Star','Morning Star','Evening Star','Pin Bar'] %}
+        <button class="learn-item candle-item candle-{{loop.index}}" data-kind="candle" data-name="{{name}}">
+          <span class="shape-preview"><i></i></span><b>{{name}}</b>
+        </button>
+        {% endfor %}
+      </div>
+      <div class="detail-stage glass-card" id="candleStage">
+        <div class="stage-visual candle-visual" id="candleVisual"><span class="wick"></span><span class="body"></span></div>
+        <div class="stage-copy"><div class="eyebrow">SELECTED CANDLE</div><h2 id="candleName">Bullish Engulfing</h2><p id="candleDesc">A two-candle bullish reversal pattern where the second candle's real body fully engulfs the previous bearish body.</p><div class="bilingual-box"><b>English</b><p id="candleEn">Shows strong buying pressure after a bearish candle.</p><b>বাংলা</b><p id="candleBn">একটি bearish candle-এর পরে শক্তিশালী buying pressure দেখায়।</p></div><div class="anatomy"><span>Open</span><span>Close</span><span>Upper Wick</span><span>Lower Wick</span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="patterns" class="learn-panel">
+    <div class="learning-layout">
+      <div class="item-library">
+        {% for name in ['Ascending Triangle','Descending Triangle','Falling Wedge','Double Top'] %}
+        <button class="learn-item pattern-item p{{loop.index}}" data-kind="pattern" data-name="{{name}}"><span class="pattern-mini pm{{loop.index}}"></span><b>{{name}}</b></button>
+        {% endfor %}
+      </div>
+      <div class="detail-stage glass-card pattern-stage">
+        <div class="pattern-visual" id="patternVisual"><svg viewBox="0 0 520 260"><polyline id="patternLine1" points="20,220 90,170 160,190 230,130 300,155 370,95 440,115 500,65"/><polyline id="patternLine2" points="20,60 120,60 220,60 320,60 420,60 500,60"/></svg></div>
+        <div class="stage-copy"><div class="eyebrow">SELECTED PATTERN</div><h2 id="patternName">Ascending Triangle</h2><p id="patternDesc">A converging structure with rising lows pressing into a relatively flat resistance area.</p><div class="bilingual-box"><b>How it forms</b><p id="patternUse">Price repeatedly tests resistance while buyers create higher lows. A breakout confirms only with context and risk control.</p><b>বাংলা</b><p id="patternBn">Resistance বারবার test করার সময় higher low তৈরি হলে buyers-এর pressure বোঝা যায়।</p></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="smc" class="learn-panel">
+    <div class="smc-grid">
+      {% for name in ['Market Structure','Liquidity','Order Block','Fair Value Gap','Displacement','Breaker','Premium & Discount','Entry Model'] %}
+      <button class="smc-card" data-name="{{name}}"><span>{{'%02d' % loop.index}}</span><b>{{name}}</b><small>Tap to understand</small></button>
+      {% endfor %}
+    </div>
+    <div class="smc-detail glass-card"><div class="eyebrow">SMC CONCEPT</div><h2 id="smcName">Market Structure</h2><p id="smcDesc">Market structure maps the sequence of highs and lows so you can distinguish directional context from random price movement.</p><p id="smcBn">বাংলা: High এবং Low-এর sequence দেখে market-এর directional context বোঝা হয়।</p></div>
+  </div>
+
+  <div id="mtf" class="learn-panel">
+    <div class="mtf-stage glass-card"><div class="mtf-layers"><div class="mtf-layer htf">HTF<br><small>1D • 4H</small></div><div class="mtf-layer mtf">MTF<br><small>1H • 15M</small></div><div class="mtf-layer ltf">LTF<br><small>5M • 1M</small></div></div><div><div class="eyebrow">TOP-DOWN ANALYSIS</div><h2>Higher → Middle → Lower timeframe</h2><p>Start with higher-timeframe context, refine on the middle timeframe, and use the lower timeframe for execution only when the higher-level narrative supports it.</p><p>বাংলা: আগে বড় timeframe-এর direction/context, তারপর middle timeframe-এ setup, শেষে lower timeframe-এ controlled entry খোঁজা হয়।</p></div></div>
+  </div>
+
+  <div id="roadmap" class="learn-panel">
+    <div class="roadmap-grid">
+      <button class="road-card r1"><span>01</span><b>Foundation</b><small>Learn the language of markets.</small></button>
+      <button class="road-card r2"><span>02</span><b>Technical Structure</b><small>Read candles, patterns and structure.</small></button>
+      <button class="road-card r3"><span>03</span><b>SMC + MTF</b><small>Build a top-down model.</small></button>
+      <button class="road-card r4"><span>04</span><b>Risk + Journal</b><small>Protect capital and review execution.</small></button>
+    </div>
+    <div id="roadDetail" class="road-detail glass-card"><div class="eyebrow">ROADMAP STAGE</div><h2>Select a stage</h2><p>Tap a roadmap card to see what to do, what to expect and what to avoid.</p></div>
+  </div>
+
+  <div id="courses" class="learn-panel">
+    <div class="course-grid">
+      {% for c in [
+        ('01','Trading Foundations','Market terminology, order types, sessions and basic workflow.'),
+        ('02','Candlestick Mastery','Candle anatomy, formations, context and confirmation.'),
+        ('03','Chart Pattern Lab','Triangles, wedges, double tops and practical confirmation.'),
+        ('04','Market Structure','HH, HL, LH, LL, BOS, CHoCH and directional context.'),
+        ('05','SMC Core','Liquidity, order blocks, FVG, displacement and premium/discount.'),
+        ('06','MTF Analysis','HTF narrative → MTF setup → LTF execution.'),
+        ('07','Risk & Trading Journal','Position sizing, risk limits, trade plans and review.')
+      ] %}
+      <article class="course-card"><span>{{c[0]}}</span><h3>{{c[1]}}</h3><p>{{c[2]}}</p><a href="{{ url_for('learning') }}">Open module →</a></article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,1 +1,88 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#07141b"><title>{% block title %}FX CHART{% endblock %}</title><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="{{url_for('static',filename='css/app.css')}}">{% block head %}{% endblock %}</head><body><div class="fx-grid"></div><div class="market-scan" aria-hidden="true">{% for x in range(34) %}<i style="--x:{{x*3.05}}%;--h:{{35+(x%9)*13}}px;--d:{{(x%8)*0.22}}s;--w:{{2+(x%3)}}px"></i>{% endfor %}</div><div class="scan-lines" aria-hidden="true"></div><header class="topbar"><a class="brand" href="{{url_for('index')}}"><span class="brand-logo"><img src="{{url_for('static',filename='images/dfx-logo.jpg')}}" alt="DFX"></span><span><b>FX</b> CHART<small>PRO • TRAINING • EDUCATION • MARKET ANALYSIS</small></span></a><nav class="mainnav"><a href="{{url_for('index')}}">Home</a><a href="{{url_for('chart')}}">Chart</a><a href="{{url_for('learning')}}">Learning</a><a href="{{url_for('community')}}">Community</a><a href="{{url_for('news')}}">News</a>{% if session.get('user_id') %}<a href="{{url_for('dashboard')}}">Dashboard</a><a href="{{url_for('calculator')}}">Calculator</a>{% endif %}</nav><div>{% if session.get('user_id') %}<a class="avatar-mini" href="{{url_for('profile')}}">{% if session.get('photo') %}<img src="{{session.get('photo')}}" alt="Profile">{% else %}{{(session.get('full_name') or 'U')[0]|upper}}{% endif %}</a>{% else %}<a class="btn btn-primary" href="{{url_for('login')}}">Login</a>{% endif %}</div></header><div class="page-tools"><button class="tool-btn" onclick="fxBack()">← Back</button><a class="tool-btn" href="{{url_for('index')}}">⌂ Home</a></div><main class="wrap">{% with msgs=get_flashed_messages(with_categories=true) %}{% for cat,msg in msgs %}<div class="flash {{cat}}">{{msg}}</div>{% endfor %}{% endwith %}{% block content %}{% endblock %}</main><button class="help-fab" onclick="toggleHelp()">?</button><div class="help-panel" id="helpPanel"><div class="help-head"><b>FX CHART HELP</b><button onclick="toggleHelp()">×</button></div><div class="help-sub">Ask about candles, patterns, SMC, MTF, risk, chart, profile, news or the website.</div><div id="helpLog" class="help-log"><div class="help-msg">Hello. Ask your trading or website question.</div></div><div class="help-row"><input id="helpInput" placeholder="Type your question..." onkeydown="if(event.key==='Enter')askHelp()"><button onclick="askHelp()">Ask</button></div></div><div id="pageTransition" class="page-transition"><div class="transition-ring"></div><b>FX CHART</b><span>Loading workspace…</span></div><script src="{{url_for('static',filename='js/app.js')}}"></script>{% block scripts %}{% endblock %}</body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#07131f">
+  <meta name="description" content="FX CHART — professional trading education, market analysis and charting.">
+  <title>{% block title %}FX CHART{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body class="fx-body">
+  <div class="market-bg" aria-hidden="true">
+    <div class="scan-grid"></div>
+    <div class="scan-beam"></div>
+    <div class="chart-stream">
+      {% for i in range(26) %}
+      <span class="bg-candle c{{ i%8 }}" style="left:{{(i*3.85)%100}}%;animation-delay:-{{(i*0.37)%8}}s;"></span>
+      {% endfor %}
+    </div>
+    <div class="ticker-line"></div>
+  </div>
+
+  <header class="topbar">
+    <a class="brand" href="{{ url_for('index') }}">
+      <span class="brand-mark">
+        {% if user and user.photo %}
+          <img src="{{ url_for('static', filename='uploads/' + user.photo) }}" alt="Profile">
+        {% elif user %}
+          <img src="{{ url_for('static', filename='images/dfx-logo.jpg') }}" alt="DFX">
+        {% else %}
+          <img src="{{ url_for('static', filename='images/dfx-logo.jpg') }}" alt="DFX">
+        {% endif %}
+      </span>
+      <span><b>FX CHART</b><small>PRO • EDUCATION • ANALYSIS</small></span>
+    </a>
+
+    <nav class="main-nav">
+      <a href="{{ url_for('index') }}">Home</a>
+      <a href="{{ url_for('chart') }}">Chart</a>
+      <a href="{{ url_for('learning') }}">Learning</a>
+      <a href="{{ url_for('community') }}">Community</a>
+      <a href="{{ url_for('news') }}">News</a>
+      <a href="{{ url_for('dashboard') }}">Dashboard</a>
+      <a href="{{ url_for('calculator') }}">Calculator</a>
+    </nav>
+
+    <div class="top-actions">
+      {% if user %}
+        <a class="avatar-link" href="{{ url_for('profile') }}">
+          {% if user.photo %}
+            <img src="{{ url_for('static', filename='uploads/' + user.photo) }}" alt="Profile">
+          {% else %}
+            <img src="{{ url_for('static', filename='images/dfx-logo.jpg') }}" alt="Profile">
+          {% endif %}
+        </a>
+        <a class="btn btn-ghost" href="{{ url_for('logout') }}">Logout</a>
+      {% else %}
+        <a class="btn btn-primary" href="{{ url_for('login') }}">Login</a>
+      {% endif %}
+    </div>
+  </header>
+
+  <div class="utility-controls">
+    <button id="backBtn" class="utility-btn" type="button">← Back</button>
+    <a class="utility-btn" href="{{ url_for('index') }}">⌂ Home</a>
+  </div>
+
+  <main class="page-shell">
+    {% block content %}{% endblock %}
+  </main>
+
+  <button id="helpBtn" class="help-fab" type="button">?</button>
+  <div id="helpPanel" class="help-panel">
+    <div class="help-head"><b>FX CHART Help</b><button id="helpClose" type="button">×</button></div>
+    <div class="help-body">
+      <p><b>Chart:</b> use the TradingView workspace for symbols, timeframes, indicators and drawings.</p>
+      <p><b>Learning:</b> select any candle, pattern, SMC or MTF item to open its explanation.</p>
+      <p><b>Calculator:</b> enter balance, risk and stop distance to estimate position sizing.</p>
+      <p><b>Community:</b> sign in to publish posts, comment and interact.</p>
+      <p><b>Login:</b> social buttons are provided where OAuth is configured. Provider credentials are required for real Facebook, Google or X/Twitter authentication.</p>
+    </div>
+  </div>
+
+  <div id="pageTransition" class="page-transition"><span>FX CHART</span></div>
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

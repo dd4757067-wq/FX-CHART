@@ -1,1 +1,26 @@
-{% extends "base.html" %}{% block title %}Dashboard — FX CHART{% endblock %}{% block content %}<section class="dashboard-hero"><div><span class="eyebrow">TRADER COMMAND CENTER</span><h1>Welcome, {{me.full_name or me.username}}</h1><p>Your workspace stays active while the market scan runs continuously in the background.</p></div><a class="btn btn-primary" href="{{url_for('calculator')}}">Risk Calculator →</a></section><section class="dashboard-grid"><div class="card"><div class="dash-head"><b>GLOBAL MARKET SCAN</b><span class="live-dot">● CONTINUOUS</span></div><div class="dash-chart"><svg viewBox="0 0 900 420" preserveAspectRatio="none"><path class="chart-line" d="M0 330 C70 300 120 350 180 270 S260 315 330 235 S410 270 470 175 S560 240 630 145 S710 200 780 105 S850 135 900 55"></path></svg><div class="dashboard-candles">{% for i in range(30) %}<i style="--i:{{i}}"></i>{% endfor %}</div><div class="scan-badge">SCANNING<br><b>STRUCTURE / LIQUIDITY / MOMENTUM</b></div></div></div><div class="dash-side"><a href="{{url_for('chart')}}">Chart <b>→</b></a><a href="{{url_for('analytics')}}">Analytics <b>→</b></a><a href="{{url_for('journal')}}">Trade Journal <b>→</b></a><a href="{{url_for('learning')}}">Learning <b>→</b></a><a href="{{url_for('risk_management')}}">Risk Management <b>→</b></a><a href="{{url_for('profile')}}">Profile <b>→</b></a></div></section><section class="metric-grid"><div class="metric-card"><span>TRADES</span><b>{{stats.trades}}</b><small>Journal records</small></div><div class="metric-card"><span>P/L</span><b>{{"%.2f"|format(stats.pnl)}}</b><small>Recorded result</small></div><div class="metric-card"><span>WINS</span><b>{{stats.wins}}</b><small>Winning trades</small></div><div class="metric-card"><span>PLAN</span><b>{{me.plan|upper}}</b><small>Current workspace</small></div></section>{% endblock %}
+{% extends "base.html" %}
+{% block title %}Dashboard • FX CHART{% endblock %}
+{% block content %}
+<section class="dashboard-shell">
+  <div class="dashboard-head">
+    <div><div class="eyebrow">COMMAND CENTER</div><h1>Trading Dashboard</h1><p class="muted">A focused workspace for charting, learning, risk and review.</p></div>
+    <div class="live-badge"><i></i> MARKET WORKSPACE</div>
+  </div>
+  <div class="dashboard-scan glass-card">
+    <div class="scan-title"><span>MARKET SCAN</span><span>CONTINUOUS ANALYSIS</span></div>
+    <svg viewBox="0 0 1200 300" preserveAspectRatio="none">
+      <polyline class="chart-glow" points="0,240 80,210 150,225 230,160 310,180 390,105 465,135 540,70 615,115 690,52 760,92 830,45 900,78 970,32 1040,65 1120,25 1200,52"/>
+      <polyline class="chart-main" points="0,240 80,210 150,225 230,160 310,180 390,105 465,135 540,70 615,115 690,52 760,92 830,45 900,78 970,32 1040,65 1120,25 1200,52"/>
+    </svg>
+    <div class="scan-candles">{% for i in range(22) %}<span style="height:{{28+(i*17)%125}}px;animation-delay:-{{i*0.19}}s"></span>{% endfor %}</div>
+  </div>
+  <div class="dashboard-cards">
+    <a href="{{ url_for('chart') }}" class="dash-card"><b>Chart Workspace</b><span>Open full market terminal →</span></a>
+    <a href="{{ url_for('learning') }}" class="dash-card"><b>Learning Center</b><span>Continue structured study →</span></a>
+    <a href="{{ url_for('risk_management') }}" class="dash-card"><b>Risk Management</b><span>Build safer trade plans →</span></a>
+    <a href="{{ url_for('calculator') }}" class="dash-card"><b>Calculator</b><span>Calculate position size →</span></a>
+    <a href="{{ url_for('journal') }}" class="dash-card"><b>Trade Journal</b><span>Record and review trades →</span></a>
+    <a href="{{ url_for('profile') }}" class="dash-card"><b>Profile</b><span>Customize your trader profile →</span></a>
+  </div>
+</section>
+{% endblock %}

@@ -1,1 +1,44 @@
-{% extends "base.html" %}{% block title %}Market Terminal — FX CHART{% endblock %}{% block content %}<section class="terminal-title"><div><span class="eyebrow">PRO MARKET TERMINAL</span><h1>Interactive Trading Chart</h1><p>Forex • Stocks • Crypto • Indices • Commodities</p></div><a class="btn" href="{{url_for('calendar')}}">Economic Calendar</a></section><div class="chart-shell-pro" id="chartShell"><div class="chart-loading" id="chartLoading"><span></span><b>Loading market terminal…</b></div><div class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div><script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>{"autosize":true,"symbol":"FX:EURUSD","interval":"60","timezone":"Etc/UTC","theme":"dark","style":"1","locale":"en","hide_top_toolbar":false,"hide_legend":false,"allow_symbol_change":true,"save_image":true,"calendar":true,"hide_side_toolbar":false,"withdateranges":true,"studies":["MASimple@tv-basicstudies","RSI@tv-basicstudies","MACD@tv-basicstudies"],"support_host":"https://www.tradingview.com"}</script></div><button class="chart-full-btn" onclick="toggleChartFullscreen()">⛶</button></div><div class="chart-help-strip"><b>Drawing workspace:</b> use TradingView's native toolbar for supported trend lines, channels, Fibonacci tools, shapes and annotations.</div>{% endblock %}
+{% extends 'base.html' %}
+{% block title %}Chart Terminal • FX CHART{% endblock %}
+{% block content %}
+<section class="terminal-page">
+  <div class="terminal-head glass-card">
+    <div><span class="eyebrow">PRO MARKET WORKSPACE</span><h1>Interactive Trading Chart</h1><p>Forex • Stocks • Crypto • Indices • Commodities</p></div>
+    <div class="terminal-actions"><button class="neo-btn" id="chartFullscreen">Fullscreen</button></div>
+  </div>
+  <div class="market-switcher glass-card">
+    <button data-symbol="OANDA:EURUSD">EUR/USD</button><button data-symbol="OANDA:GBPUSD">GBP/USD</button><button data-symbol="OANDA:XAUUSD">XAU/USD</button><button data-symbol="BINANCE:BTCUSDT">BTC/USDT</button>
+    <button data-symbol="NASDAQ:AAPL">AAPL</button><button data-symbol="NASDAQ:TSLA">TSLA</button><button data-symbol="SP:SPX">S&P 500</button>
+  </div>
+  <div class="terminal-shell glass-card" id="terminalShell">
+    <div class="terminal-loading" id="terminalLoading"><div class="loader-ring"></div><strong>Loading professional chart…</strong><span>Connecting to market chart provider</span></div>
+    <div class="tradingview-widget-container" id="tvChart" style="width:100%;height:100%;min-height:620px"><div class="tradingview-widget-container__widget" style="height:calc(100% - 32px);width:100%"></div></div>
+    <div class="terminal-fallback" id="terminalFallback"><strong>Chart provider is taking longer than expected.</strong><span>Refresh the page or choose another market.</span><button class="neo-btn" onclick="location.reload()">Retry</button></div>
+  </div>
+  <div class="terminal-info-grid">
+    <div class="glass-card"><span>MARKET</span><strong id="selectedMarket">EUR/USD</strong></div>
+    <div class="glass-card"><span>TIMEFRAMES</span><strong>1m · 5m · 15m · 1H · 4H · 1D · 1W · 1M</strong></div>
+    <div class="glass-card"><span>TOOLS</span><strong>Drawings · Indicators · Alerts · Compare</strong></div>
+    <div class="glass-card"><span>MODE</span><strong>Professional workspace</strong></div>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="https://s3.tradingview.com/tv.js"></script>
+<script>
+(function(){
+ const loading=document.getElementById('terminalLoading'), fallback=document.getElementById('terminalFallback'), shell=document.getElementById('terminalShell'), market=document.getElementById('selectedMarket');
+ let symbol='OANDA:EURUSD';
+ function mount(){
+   loading.style.display='flex'; fallback.style.display='none';
+   const root=document.getElementById('tvChart'); root.innerHTML='<div class="tradingview-widget-container__widget" style="height:calc(100% - 32px);width:100%"></div>';
+   if(!window.TradingView){ setTimeout(mount,1200); return; }
+   new TradingView.widget({autosize:true,symbol:symbol,interval:'60',timezone:'Etc/UTC',theme:'dark',style:'1',locale:'en',toolbar_bg:'#08131f',enable_publishing:false,hide_top_toolbar:false,hide_legend:false,hide_side_toolbar:false,allow_symbol_change:true,save_image:true,calendar:false,studies:['MA@tv-basicstudies','RSI@tv-basicstudies','MACD@tv-basicstudies'],container_id:'tvChart'});
+   setTimeout(()=>{loading.style.display='none';},2200); setTimeout(()=>{if(loading.style.display!=='none'){loading.style.display='none';fallback.style.display='flex';}},9000);
+ }
+ document.querySelectorAll('[data-symbol]').forEach(b=>b.addEventListener('click',()=>{symbol=b.dataset.symbol; market.textContent=b.textContent; mount();}));
+ document.getElementById('chartFullscreen')?.addEventListener('click',()=>{if(shell.requestFullscreen)shell.requestFullscreen();else shell.classList.toggle('is-fullscreen');});
+ mount();
+})();
+</script>
+{% endblock %}

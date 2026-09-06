@@ -1,14 +1,100 @@
-function fxBack(){if(history.length>1)history.back();else location.href="/"}
-function toggleHelp(){document.getElementById("helpPanel")?.classList.toggle("open")}
-function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[c]))}
-async function askHelp(){const i=document.getElementById("helpInput"),l=document.getElementById("helpLog"),q=(i?.value||"").trim();if(!q)return;l.innerHTML+=`<div class="help-msg"><b>You:</b> ${esc(q)}</div>`;i.value="";try{const r=await fetch("/api/help",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:q})}),d=await r.json();l.innerHTML+=`<div class="help-msg"><b>FX CHART:</b> ${esc(d.answer||"Please try another question.")}</div>`}catch(e){l.innerHTML+='<div class="help-msg"><b>FX CHART:</b> Help is temporarily unavailable.</div>'}l.scrollTop=l.scrollHeight}
-function togglePassword(id,b){const i=document.getElementById(id);if(!i)return;i.type=i.type==="password"?"text":"password";b.textContent=i.type==="password"?"Show":"Hide"}
-function startLoginTransition(){document.getElementById("pageTransition")?.classList.add("show")}
-function toggleChartFullscreen(){const e=document.getElementById("chartShell");if(!e)return;if(!document.fullscreenElement)e.requestFullscreen?.();else document.exitFullscreen?.()}
-function calcRiskV5(){const b=+document.getElementById("riskBal").value||0,r=+document.getElementById("riskPct").value||0;document.getElementById("riskResult").textContent=(b*r/100).toFixed(2)+" account-currency risk"}
-function selectCandle(name){const details={"Bullish Engulfing":["Bullish Engulfing","A bullish candle fully overwhelms the prior bearish body.","Open: below/near prior body • Close: above prior body • Use: confirmation after a meaningful location, not in isolation."],"Bearish Engulfing":["Bearish Engulfing","A bearish candle fully overwhelms the prior bullish body.","Open: above/near prior body • Close: below prior body • Use: confirmation after liquidity or resistance context."],"Doji":["Doji","Open and close are very close, showing temporary balance or indecision.","Open ≈ Close • High/Low define the range • Use: context and confirmation, not an automatic reversal signal."],"Hammer":["Hammer","A rejection candle with a long lower wick after a decline.","Open/Close near upper area • Long lower wick • Use: possible rejection; wait for context and confirmation."],"Shooting Star":["Shooting Star","A rejection candle with a long upper wick after an advance.","Open/Close near lower area • Long upper wick • Use: possible bearish rejection; confirm before entry."],"Morning Star":["Morning Star","A three-candle bullish reversal sequence after a decline.","Bearish candle → small indecision → bullish recovery • Use: reversal context plus confirmation."],"Evening Star":["Evening Star","A three-candle bearish reversal sequence after an advance.","Bullish candle → small indecision → bearish recovery • Use: reversal context plus confirmation."],"Pin Bar":["Pin Bar","A candle showing sharp rejection through a long wick.","Long rejection wick + compact body • Use: location, liquidity and confirmation determine quality."]};const d=details[name]||[name,"Study the candle in context.","Open, High, Low and Close must be read together with structure."];document.getElementById("focusLabel").textContent=name;const c=document.getElementById("focusCandle");c.classList.remove("play");void c.offsetWidth;c.classList.add("play");document.getElementById("candleDetail").innerHTML=`<span class="eyebrow">SELECTED CANDLE</span><h3>${esc(d[0])}</h3><p>${esc(d[1])}</p><p><b>Open / Close / Wick:</b> ${esc(d[2])}</p><p><b>বাংলা:</b> এই candle একা trade signal নয়; market structure, liquidity, location এবং confirmation-এর সাথে ব্যবহার করুন।</p>`}
-function selectPattern(name){const info={"Ascending Triangle":"Higher lows press into resistance; breakout quality depends on context, momentum and confirmation.","Descending Triangle":"Lower highs press into support; watch for breakdown, failed break and retest.","Falling Wedge":"Contracting downward structure; a bullish break needs confirmation and location context.","Double Top":"Two highs near the same area with a neckline; confirmation comes from structural break, not the shape alone."};const s=document.getElementById("formationChart");s.classList.remove("replay");void s.offsetWidth;s.classList.add("replay");document.getElementById("patternDetail").innerHTML=`<span class="eyebrow">FORMATION LOCKED</span><h3>${esc(name)}</h3><p>${esc(info[name]||"Study swing sequence, level interaction and confirmation.")}</p><p><b>বাংলা:</b> formation দেখা গেলেই entry নয়। breakout/failure, retest, location এবং risk confirmation করুন।</p>`}
-function selectSMC(name){const info={"Market Structure":"Defines swing direction and helps frame trend, break and shift conditions.","Liquidity":"Areas where stops or resting orders may cluster; study sweeps and reactions around meaningful highs/lows.","Order Block":"A price area associated with an institutional-style displacement narrative; validate with structure and context.","Fair Value Gap":"A three-candle imbalance area that may become a reaction or rebalancing zone.","Displacement":"Strong directional expansion that changes the short-term order flow and leaves imbalance.","Breaker":"A failed zone that may flip its role after a structural break and retest.","Premium & Discount":"A framework for judging whether price is relatively high or low within a chosen dealing range.","Entry Model":"A repeatable sequence combining context, location, trigger, invalidation and risk."};document.getElementById("smcDetail").innerHTML=`<span class="eyebrow">SMC CONCEPT</span><h3>${esc(name)}</h3><p>${esc(info[name]||"Study the concept in context.")}</p><p><b>Used for:</b> context → location → confirmation → controlled execution.</p><p><b>বাংলা:</b> SMC concept একা entry signal নয়; market context ও risk model-এর সাথে ব্যবহার করতে হবে.</p>`;const f=document.getElementById("smcFlow");f.classList.remove("replay");void f.offsetWidth;f.classList.add("replay")}
-function selectRoad(n){const data={1:["Foundation","Learn candles, market terminology, chart navigation and basic order mechanics.","Practice: identify OHLC and basic structure without entering trades."],2:["Technical Analysis","Study swing structure, support/resistance and chart patterns.","Practice: mark levels, patterns and invalidation zones."],3:["SMC & MTF","Combine liquidity, displacement, FVG, OB and top-down timeframe context.","Practice: HTF bias → zone → LTF confirmation."],4:["Execution & Risk","Build a risk model, journal, psychology process and repeatable execution.","Practice: fixed risk, predefined invalidation and post-trade review."]};const d=data[n];document.getElementById("roadDetail").innerHTML=`<span class="eyebrow">ROADMAP STAGE ${n}</span><h3>${esc(d[0])}</h3><p>${esc(d[1])}</p><p><b>Practice:</b> ${esc(d[2])}</p>`;document.querySelectorAll(".road-step").forEach(x=>x.classList.remove("selected"));document.querySelector(`.road-step[data-road="${n}"]`)?.classList.add("selected")}
+document.addEventListener('DOMContentLoaded', () => {
+  const transition = document.getElementById('pageTransition');
+  document.querySelectorAll('a[href]').forEach(a => {
+    const href = a.getAttribute('href');
+    if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('javascript:') || a.target === '_blank') return;
+    a.addEventListener('click', e => {
+      const u = new URL(a.href, location.href);
+      if (u.origin !== location.origin) return;
+      if (transition) { e.preventDefault(); transition.classList.add('show'); setTimeout(()=>location.href=a.href, 180); }
+    });
+  });
 
-document.addEventListener("DOMContentLoaded",()=>{document.querySelectorAll(".learn-tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".learn-tab").forEach(x=>x.classList.remove("active"));document.querySelectorAll(".learn-panel").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.getElementById(b.dataset.target)?.classList.add("active")});document.querySelectorAll(".concept-card[data-candle]").forEach(b=>b.onclick=()=>selectCandle(b.dataset.candle));document.querySelectorAll(".pattern-card[data-pattern]").forEach(b=>b.onclick=()=>selectPattern(b.dataset.pattern));document.querySelectorAll(".smc-card[data-smc]").forEach(b=>b.onclick=()=>selectSMC(b.dataset.smc));document.querySelectorAll(".road-step[data-road]").forEach(b=>b.onclick=()=>selectRoad(b.dataset.road));document.querySelectorAll(".like").forEach(b=>b.onclick=()=>fetch("/community/like/"+b.dataset.id,{method:"POST"}).then(r=>r.json()).then(d=>{const x=b.querySelector("span");if(x)x.textContent=d.likes}).catch(()=>{}));const ph=document.getElementById("profilePhoto");ph?.addEventListener("change",()=>{const f=ph.files?.[0],img=document.getElementById("profilePreview"),initial=document.getElementById("profileInitial");if(!f)return;img.src=URL.createObjectURL(f);img.hidden=false;if(initial)initial.style.display="none";document.querySelector(".profile-form")?.requestSubmit()});document.querySelectorAll("a:not([target])").forEach(a=>{a.addEventListener("click",e=>{const h=a.getAttribute("href");if(!h||h.startsWith("#")||h.startsWith("javascript:")||h.startsWith("mailto:")||a.origin!==location.origin)return;document.getElementById("pageTransition")?.classList.add("show")})});setTimeout(()=>document.getElementById("pageTransition")?.classList.remove("show"),500)})
+  const back = document.getElementById('backBtn');
+  if (back) back.addEventListener('click', () => history.back());
+
+  const help = document.getElementById('helpBtn'), panel = document.getElementById('helpPanel'), close = document.getElementById('helpClose');
+  if (help && panel) help.addEventListener('click',()=>panel.classList.toggle('open'));
+  if (close && panel) close.addEventListener('click',()=>panel.classList.remove('open'));
+
+  const pass = document.getElementById('loginPassword'), toggle = document.getElementById('togglePassword');
+  if (pass && toggle) toggle.addEventListener('click',()=>{ pass.type=pass.type==='password'?'text':'password'; toggle.textContent=pass.type==='password'?'Show':'Hide'; });
+
+  document.querySelectorAll('.social-btn').forEach(btn => btn.addEventListener('click', () => {
+    const provider = btn.dataset.provider;
+    alert(provider === 'google' ? 'Google/Gmail OAuth needs your Google Client ID and Client Secret.' :
+      provider === 'facebook' ? 'Facebook OAuth needs your Facebook App ID and App Secret.' :
+      'X/Twitter OAuth needs your X developer credentials.');
+  }));
+
+  const tabs = document.querySelectorAll('.learn-tab'), panels = document.querySelectorAll('.learn-panel');
+  tabs.forEach(t => t.addEventListener('click',()=>{
+    tabs.forEach(x=>x.classList.remove('active')); panels.forEach(x=>x.classList.remove('active'));
+    t.classList.add('active'); const p=document.getElementById(t.dataset.tab); if(p) p.classList.add('active');
+  }));
+
+  const candleData = {
+    'Bullish Engulfing':['Bullish Engulfing','A two-candle bullish reversal pattern where the second body engulfs the previous bearish body.','Shows strong buying pressure after bearish price action.','Bearish candle-এর পরে শক্তিশালী buying pressure বোঝায়।','c1'],
+    'Bearish Engulfing':['Bearish Engulfing','A two-candle bearish reversal pattern where the second body engulfs the previous bullish body.','Shows strong selling pressure after bullish price action.','Bullish candle-এর পরে শক্তিশালী selling pressure বোঝায়।','c2'],
+    'Doji':['Doji','Open and close are very close, producing a small real body.','Signals balance or hesitation; context is essential.','Open ও Close কাছাকাছি হলে indecision বা balance বোঝায়।','c3'],
+    'Hammer':['Hammer','A small body with a long lower wick after a decline.','Can signal rejection of lower prices when context confirms.','নিচের price reject করে buyers ফিরে আসার সম্ভাবনা দেখায়।','c4'],
+    'Shooting Star':['Shooting Star','A small body with a long upper wick after an advance.','Can signal rejection of higher prices when context confirms.','উপরের price reject হওয়ার সম্ভাবনা দেখায়।','c5'],
+    'Morning Star':['Morning Star','A three-candle bullish reversal sequence after a decline.','Shows weakening sellers and a potential shift to buyers.','তিন-candle sequence-এ seller দুর্বল হয়ে buyer control আসতে পারে।','c6'],
+    'Evening Star':['Evening Star','A three-candle bearish reversal sequence after an advance.','Shows weakening buyers and potential seller control.','তিন-candle sequence-এ buyer দুর্বল হয়ে seller control আসতে পারে।','c7'],
+    'Pin Bar':['Pin Bar','A candle with a pronounced wick and relatively small body.','Highlights rejection; location and market structure matter.','লম্বা wick rejection এবং ছোট body দেখায়; location গুরুত্বপূর্ণ।','c8']
+  };
+  document.querySelectorAll('.candle-item').forEach(btn=>btn.addEventListener('click',()=>{
+    document.querySelectorAll('.candle-item').forEach(x=>x.classList.remove('selected'));
+    btn.classList.add('selected');
+    const d=candleData[btn.dataset.name]; if(!d) return;
+    const visual=document.getElementById('candleVisual');
+    document.getElementById('candleName').textContent=d[0];
+    document.getElementById('candleDesc').textContent=d[1];
+    document.getElementById('candleEn').textContent=d[2];
+    document.getElementById('candleBn').textContent=d[3];
+    visual.className='stage-visual candle-visual '+d[4]+' animate-in';
+    setTimeout(()=>visual.classList.remove('animate-in'),650);
+  }));
+
+  const patterns={
+    'Ascending Triangle':['Ascending Triangle','Converging structure with rising lows pressing into relatively flat resistance.','Higher lows show buyers becoming more aggressive; breakout needs context and risk control.','Higher low তৈরি হয়ে resistance-এর দিকে pressure বাড়ে।','asc'],
+    'Descending Triangle':['Descending Triangle','Converging structure with falling highs pressing into relatively flat support.','Lower highs show sellers becoming more aggressive; confirmation matters.','Lower high তৈরি হয়ে support-এর দিকে selling pressure বাড়ে।','desc'],
+    'Falling Wedge':['Falling Wedge','Two downward-sloping converging boundaries compress price.','Momentum can contract before a breakout; wait for confirmation and context.','দুইটি নিচের দিকে ঢালু line কাছে আসতে থাকে; breakout confirmation দরকার।','wedge'],
+    'Double Top':['Double Top','Price forms two prominent highs near a similar level with a valley between them.','A break of the intervening neckline gives stronger confirmation of reversal.','দুটি কাছাকাছি high এবং মাঝের neckline break reversal confirmation দিতে পারে।','double']
+  };
+  document.querySelectorAll('.pattern-item').forEach(btn=>btn.addEventListener('click',()=>{
+    document.querySelectorAll('.pattern-item').forEach(x=>x.classList.remove('selected')); btn.classList.add('selected');
+    const d=patterns[btn.dataset.name]; document.getElementById('patternName').textContent=d[0]; document.getElementById('patternDesc').textContent=d[1]; document.getElementById('patternUse').textContent=d[2]; document.getElementById('patternBn').textContent=d[3];
+    const v=document.getElementById('patternVisual'); v.className='pattern-visual '+d[4]+' animate-in'; setTimeout(()=>v.classList.remove('animate-in'),850);
+  }));
+
+  const smc={
+    'Market Structure':['Market Structure','Maps highs and lows to identify directional context.','বাংলা: High/Low sequence দেখে direction ও structure বোঝা হয়।'],
+    'Liquidity':['Liquidity','Areas where resting orders are likely concentrated, often around obvious highs/lows.','বাংলা: সাধারণত obvious high/low-এর আশেপাশে resting orders-এর concentration থাকতে পারে।'],
+    'Order Block':['Order Block','A price area associated with the final opposing candle before a strong displacement.','বাংলা: Strong displacement-এর আগে থাকা গুরুত্বপূর্ণ opposing candle-এর area হিসেবে দেখা হয়।'],
+    'Fair Value Gap':['Fair Value Gap','A three-candle imbalance area where price moves rapidly and leaves inefficient trading.','বাংলা: দ্রুত price move-এর কারণে তৈরি হওয়া imbalance area।'],
+    'Displacement':['Displacement','A decisive expansion in price showing strong directional intent.','বাংলা: বড় ও decisive price expansion directional intent দেখায়।'],
+    'Breaker':['Breaker','A failed order-block area that can become relevant from the opposite side after structure changes.','বাংলা: Structure change-এর পরে failed zone বিপরীত দিকের reaction area হতে পারে।'],
+    'Premium & Discount':['Premium & Discount','A framework for judging relative price location within a chosen range.','বাংলা: নির্দিষ্ট range-এর মধ্যে price তুলনামূলকভাবে expensive না cheap তা বোঝার framework।'],
+    'Entry Model':['Entry Model','A repeatable sequence combining context, confirmation, invalidation and risk.','বাংলা: Context + confirmation + invalidation + risk মিলিয়ে repeatable entry process।']
+  };
+  document.querySelectorAll('.smc-card').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('.smc-card').forEach(x=>x.classList.remove('selected')); b.classList.add('selected');
+    const d=smc[b.dataset.name]; document.getElementById('smcName').textContent=d[0]; document.getElementById('smcDesc').textContent=d[1]; document.getElementById('smcBn').textContent=d[2];
+  }));
+
+  const road={
+    'r1':['Foundation','Do: learn terminology, sessions, order types and basic chart reading.','Expect: slower progress at first. Avoid: trading before you understand the language.'],
+    'r2':['Technical Structure','Do: practice candles, patterns, HH/HL/LH/LL and confirmation.','Expect: repeated chart examples. Avoid: memorizing patterns without context.'],
+    'r3':['SMC + MTF','Do: build HTF→MTF→LTF analysis and define invalidation.','Expect: fewer but more structured setups. Avoid: forcing a setup because a zone exists.'],
+    'r4':['Risk + Journal','Do: define risk before entry and review every trade.','Expect: consistency to improve through feedback. Avoid: increasing risk after losses.']
+  };
+  document.querySelectorAll('.road-card').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('.road-card').forEach(x=>x.classList.remove('selected')); b.classList.add('selected');
+    const d=road[b.classList[1]]; document.getElementById('roadDetail').innerHTML=`<div class="eyebrow">ROADMAP STAGE</div><h2>${d[0]}</h2><p>${d[1]}</p><p>${d[2]}</p>`;
+  }));
+
+  document.querySelectorAll('.like-btn').forEach(b=>b.addEventListener('click',()=>{
+    fetch('/community/like/'+b.dataset.id,{method:'POST'}).then(()=>{b.textContent='♥ Liked';}).catch(()=>{});
+  }));
+});

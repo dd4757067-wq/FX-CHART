@@ -1,1 +1,64 @@
-{% extends "base.html" %}{% block title %}FX CHART — Professional Trading{% endblock %}{% block content %}<section class="home-hero"><div class="hero-copy"><span class="eyebrow">GLOBAL TRADING EDUCATION • MARKET INTELLIGENCE</span><h1>Trade with <em>clarity.</em><br>Learn with structure.</h1><p>FX CHART is a professional trading workspace for market analysis, chart practice, Smart Money Concepts, multi-timeframe analysis, risk management and trader development.</p><div class="hero-actions"><a class="btn btn-primary" href="{{url_for('chart')}}">Open Live Chart →</a><a class="btn" href="{{url_for('learning')}}">Explore Learning</a></div><div class="hero-stats"><span>● MARKET SCAN ACTIVE</span><span>◈ MULTI-TIMEFRAME</span><span>◇ RISK-FIRST</span></div></div><div class="hero-terminal"><div class="terminal-bar"><span>FX CHART // LIVE MARKET ENGINE</span><span class="live-dot">● LIVE UI</span></div><div class="hero-canvas"><svg viewBox="0 0 900 430" preserveAspectRatio="none"><path class="chart-line" d="M0 335 C90 310 105 345 170 280 S255 320 315 230 S400 260 470 190 S560 240 625 145 S710 210 770 105 S840 145 900 55"></path><path class="chart-line faint" d="M0 360 C90 340 150 365 225 300 S330 340 400 270 S500 295 580 220 S690 275 760 170 S830 200 900 125"></path></svg><div class="candle-stream">{% for i in range(28) %}<i style="--i:{{i}}"></i>{% endfor %}</div><div class="terminal-readout"><b>MARKET STRUCTURE</b><span>Liquidity → Displacement → Imbalance → Confirmation</span></div></div></div></section><section class="section-title"><span class="eyebrow">WORKSPACE</span><h2>Everything arranged for the trader.</h2></section><section class="feature-grid"><a class="feature-card" href="{{url_for('chart')}}"><b>01 / CHART</b><h3>Advanced chart workspace</h3><p>Multiple markets, timeframes, indicators, drawing tools and fullscreen analysis.</p></a><a class="feature-card" href="{{url_for('learning')}}"><b>02 / LEARNING</b><h3>Interactive trading lab</h3><p>Click a candle, pattern, SMC concept or MTF step to bring the concept forward and reveal its details.</p></a><a class="feature-card" href="{{url_for('calculator')}}"><b>03 / RISK</b><h3>Risk calculator</h3><p>Plan position risk before execution and build a disciplined process.</p></a><a class="feature-card" href="{{url_for('community')}}"><b>04 / COMMUNITY</b><h3>Trader community</h3><p>Publish analysis, discuss setups and learn from other traders in a clean social feed.</p></a><a class="feature-card" href="{{url_for('news')}}"><b>05 / NEWS</b><h3>Market news & calendar</h3><p>Keep news and economic events in one professional workspace.</p></a><a class="feature-card" href="{{url_for('dashboard')}}"><b>06 / DASHBOARD</b><h3>Personal command center</h3><p>Track your workspace, journal, analytics, broker links and learning path.</p></a></section><section class="cert-section"><span class="eyebrow">CREDENTIALS & TRUST</span><h2>Platform certifications & qualifications</h2><p class="muted">These are <b>FX CHART sample/demo credentials</b> for the website design and branding—not government, broker, exchange or third-party certifications.</p><div class="cert-grid"><div><b>FX CHART Professional Education</b><span>Internal platform qualification • Demo credential</span></div><div><b>Smart Money Concepts Track</b><span>Structured learning pathway • Demo credential</span></div><div><b>Risk Management Track</b><span>Risk-first trading curriculum • Demo credential</span></div><div><b>Technical Analysis Lab</b><span>Chart & pattern practice • Demo credential</span></div><div><b>Multi-Timeframe Analysis</b><span>HTF → MTF → LTF methodology • Demo credential</span></div><div><b>Trader Development Program</b><span>Roadmap & journal discipline • Demo credential</span></div></div></section><footer class="site-footer"><div><b>FX CHART</b><span>Professional trading education & market analysis.</span></div><div><b>Contact</b><a href="mailto:dd4757067@gmail.com">dd4757067@gmail.com</a></div><div><b>Platform</b><span>Education • Analysis • Community</span></div></footer>{% endblock %}
+{% extends "base.html" %}
+{% block title %}FX CHART • Professional Trading Education{% endblock %}
+{% block content %}
+<section class="hero full-bleed">
+  <div class="hero-copy">
+    <div class="eyebrow">FX CHART // PROFESSIONAL MARKET EDUCATION</div>
+    <h1>Trade with <span>clarity.</span><br>Learn with structure.</h1>
+    <p>Professional charting, Smart Money Concepts, market education, analytics and a focused trading workspace — built for mobile and desktop.</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="{{ url_for('chart') }}">Open Market Chart</a>
+      <a class="btn btn-ghost" href="{{ url_for('learning') }}">Explore Learning</a>
+    </div>
+  </div>
+  <div class="hero-terminal glass-card">
+    <div class="terminal-top"><span>MARKET FLOW</span><span class="pulse-dot">●</span></div>
+    <div class="hero-chart">
+      <svg viewBox="0 0 900 280" preserveAspectRatio="none" aria-label="Animated market chart">
+        <polyline class="chart-glow" points="0,220 65,205 115,215 175,160 230,178 285,125 340,145 395,92 455,112 510,74 565,105 620,55 675,88 735,42 800,70 900,28"/>
+        <polyline class="chart-main" points="0,220 65,205 115,215 175,160 230,178 285,125 340,145 395,92 455,112 510,74 565,105 620,55 675,88 735,42 800,70 900,28"/>
+      </svg>
+      <div class="terminal-candles">
+        {% for i in range(16) %}<span class="mini-candle mc{{i%6}}" style="height:{{24+(i*11)%100}}px;animation-delay:-{{i*0.23}}s"></span>{% endfor %}
+      </div>
+    </div>
+    <div class="terminal-footer"><span>FOREX</span><span>CRYPTO</span><span>STOCKS</span><span>GOLD</span><span>INDICES</span></div>
+  </div>
+</section>
+
+<section class="section-grid">
+  <a class="feature-card" href="{{ url_for('chart') }}"><span class="feature-icon">⌁</span><h3>Market Chart</h3><p>Professional interactive chart workspace with drawing and analysis tools.</p></a>
+  <a class="feature-card" href="{{ url_for('learning') }}"><span class="feature-icon">◈</span><h3>Structured Learning</h3><p>Step-by-step candles, patterns, SMC, MTF and practical course modules.</p></a>
+  <a class="feature-card" href="{{ url_for('calculator') }}"><span class="feature-icon">∑</span><h3>Risk Calculator</h3><p>Plan risk, stop distance and position sizing before taking a trade.</p></a>
+  <a class="feature-card" href="{{ url_for('community') }}"><span class="feature-icon">◎</span><h3>Community</h3><p>Share ideas, discuss setups and build a professional learning network.</p></a>
+  <a class="feature-card" href="{{ url_for('news') }}"><span class="feature-icon">◌</span><h3>Market News</h3><p>Provider-backed market stories and economic-calendar information.</p></a>
+  <a class="feature-card" href="{{ url_for('dashboard') }}"><span class="feature-icon">▦</span><h3>Dashboard</h3><p>A focused command center for your trading education workflow.</p></a>
+</section>
+
+<section class="section-block">
+  <div class="section-heading"><div><div class="eyebrow">LEARNING SYSTEM</div><h2>From first candle to structured execution.</h2></div></div>
+  <div class="roadmap-home">
+    <div><span>01</span><b>Foundation</b><small>Market basics • candles • terminology</small></div>
+    <div><span>02</span><b>Structure</b><small>Patterns • market structure • liquidity</small></div>
+    <div><span>03</span><b>SMC & MTF</b><small>Order blocks • FVG • top-down analysis</small></div>
+    <div><span>04</span><b>Execution</b><small>Risk • journal • review • discipline</small></div>
+  </div>
+</section>
+
+<section class="credentials section-block">
+  <div class="section-heading"><div><div class="eyebrow">EDUCATIONAL CREDENTIALS</div><h2>Training & qualification framework</h2></div></div>
+  <p class="muted">The items below are presented as internal/demo educational credentials unless independently issued or verified. No official accreditation is implied.</p>
+  <div class="credential-grid">
+    <div class="credential"><b>FX CHART</b><span>Trading Foundations</span><small>Educational / Demo</small></div>
+    <div class="credential"><b>FX CHART</b><span>Technical Analysis</span><small>Educational / Demo</small></div>
+    <div class="credential"><b>FX CHART</b><span>SMC & Market Structure</span><small>Educational / Demo</small></div>
+    <div class="credential"><b>FX CHART</b><span>Risk Management</span><small>Educational / Demo</small></div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div><b>FX CHART</b><p>Professional trading education & market analysis.</p></div>
+  <div><span>Contact</span><a href="mailto:dd4757067@gmail.com">dd4757067@gmail.com</a></div>
+  <div><span>Focus</span><p>Forex • Crypto • Stocks • Gold • Indices</p></div>
+</footer>
+{% endblock %}

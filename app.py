@@ -12,6 +12,7 @@ os.makedirs(os.path.dirname(DB), exist_ok=True)
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 app = Flask(__name__)
+# FX_CHART_V8_UI_BACKEND_PRESERVED
 app.secret_key = os.environ.get("FXCHART_SECRET_KEY", secrets.token_hex(32))
 app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024
 ALLOWED = {"png", "jpg", "jpeg", "webp", "gif"}

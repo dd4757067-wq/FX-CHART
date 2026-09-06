@@ -1,2 +1,25 @@
-{% extends "base.html" %}{% block title %}Risk Calculator — FX CHART{% endblock %}
-{% block content %}<div class="card"><h1>Risk Calculator</h1><div class="formgrid"><label>Account balance<input id="bal" type="number" value="1000"></label><label>Risk %<input id="risk" type="number" value="1" step="0.1"></label><label>Entry<input id="entry" type="number" value="1.1000" step="any"></label><label>Stop Loss<input id="sl" type="number" value="1.0950" step="any"></label></div><button class="btn primary" onclick="calcRisk()">Calculate</button><div id="calcOut" class="metric"></div><p class="muted">This is a simplified educational calculation. Exact lot sizing varies by instrument, contract size and account currency.</p></div>{% endblock %}
+{% extends 'base.html' %}
+{% block title %}Trading Calculator • FX CHART{% endblock %}
+{% block content %}
+<section class="calculator-page">
+ <div class="calc-hero glass-card"><span class="eyebrow">RISK & POSITION ENGINE</span><h1>Advanced Trading Calculator</h1><p>Plan risk, position size, reward and trade levels before execution.</p></div>
+ <div class="calc-grid">
+  <div class="glass-card calc-form">
+   <label>Account Balance <input id="balance" type="number" step="any" value="1000"></label>
+   <label>Risk % <input id="risk" type="number" step="any" value="1"></label>
+   <label>Entry Price <input id="entry" type="number" step="any" value="100"></label>
+   <label>Stop Loss <input id="stop" type="number" step="any" value="99"></label>
+   <label>Take Profit <input id="tp" type="number" step="any" value="102"></label>
+   <label>Contract / Point Multiplier <input id="mult" type="number" step="any" value="1"></label>
+   <button class="neo-btn" id="calculateTrade">Calculate</button>
+  </div>
+  <div class="glass-card calc-results">
+   <div><span>Risk Amount</span><strong id="riskAmt">—</strong></div><div><span>Stop Distance</span><strong id="distance">—</strong></div><div><span>Position Size</span><strong id="size">—</strong></div><div><span>Potential Profit</span><strong id="profit">—</strong></div><div><span>Risk / Reward</span><strong id="rr">—</strong></div>
+  </div>
+ </div>
+ <div class="glass-card calc-note"><strong>Educational calculator</strong><p>Results are mathematical estimates. Broker contract specifications, pip value, fees, spread and slippage can change the final trade size and outcome.</p></div>
+</section>
+{% endblock %}
+{% block scripts %}<script>
+(()=>{const q=id=>document.getElementById(id);function calc(){const b=+q('balance').value||0,r=(+q('risk').value||0)/100,e=+q('entry').value,s=+q('stop').value,t=+q('tp').value,m=+q('mult').value||1,ra=b*r,d=Math.abs(e-s),p=Math.abs(t-e),size=d?ra/(d*m):0,profit=size*p*m,rr=ra?profit/ra:0;q('riskAmt').textContent=ra.toFixed(2);q('distance').textContent=d.toFixed(5);q('size').textContent=size.toFixed(4);q('profit').textContent=profit.toFixed(2);q('rr').textContent=rr.toFixed(2)+'R'}q('calculateTrade').addEventListener('click',calc);calc()})();
+</script>{% endblock %}
