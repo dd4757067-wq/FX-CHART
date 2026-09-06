@@ -13,7 +13,23 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 app = Flask(__name__)
 # FX_CHART_V8_UI_BACKEND_PRESERVED
-app.secret_key = os.environ.get("FXCHART_SECRET_KEY", secrets.token_hex(32))
+
+# --- FIX: persistent secret key ---
+# আগে প্রতিবার সার্ভার রিস্টার্ট/redeploy হলে random secret key তৈরি হতো
+# (যদি FXCHART_SECRET_KEY env variable সেট করা না থাকতো), ফলে সব ইউজার
+# লগআউট হয়ে যেত। এখন key একবার তৈরি হয়ে ফাইলে সংরক্ষিত থাকে,
+# অথবা FXCHART_SECRET_KEY environment variable থেকে নেওয়া যায় (Render এ সেট করা সবচেয়ে ভালো)।
+_SECRET_FILE = os.path.join(BASE, "database", "secret.key")
+if os.environ.get("FXCHART_SECRET_KEY"):
+    app.secret_key = os.environ["FXCHART_SECRET_KEY"]
+elif os.path.exists(_SECRET_FILE):
+    app.secret_key = open(_SECRET_FILE).read().strip()
+else:
+    _key = secrets.token_hex(32)
+    with open(_SECRET_FILE, "w") as _f:
+        _f.write(_key)
+    app.secret_key = _key
+
 app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024
 ALLOWED = {"png", "jpg", "jpeg", "webp", "gif"}
 
@@ -293,8 +309,8 @@ def register():
         email=request.form.get("email","").strip().lower()
         phone=request.form.get("phone","").strip()
         password=request.form.get("password","")
-        if len(username)<3 or len(password)<6 or not email:
-            flash("Username must be 3+ characters, email is required and password must be 6+ characters.","warning")
+        if len(username)<3 or len(password)<8 or not email:
+            flash("Username must be 3+ characters, email is required and password must be 8+ characters.","warning")
             return redirect(url_for("register"))
         con=db()
         try:
