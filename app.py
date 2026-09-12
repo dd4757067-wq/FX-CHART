@@ -309,8 +309,12 @@ def register():
         email=request.form.get("email","").strip().lower()
         phone=request.form.get("phone","").strip()
         password=request.form.get("password","")
+        confirm_password=request.form.get("confirm_password","")
         if len(username)<3 or len(password)<8 or not email:
             flash("Username must be 3+ characters, email is required and password must be 8+ characters.","warning")
+            return redirect(url_for("register"))
+        if password != confirm_password:
+            flash("Password and Confirm Password do not match.","warning")
             return redirect(url_for("register"))
         con=db()
         try:

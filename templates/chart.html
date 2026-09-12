@@ -1,19 +1,31 @@
 {% extends 'base.html' %}
-{% block title %}Chart Terminal • FX CHART{% endblock %}
+{% block title %}Live Chart • FX CHART{% endblock %}
 {% block content %}
 <section class="terminal-page">
   <div class="terminal-head glass-card">
-    <div><span class="eyebrow">PRO MARKET WORKSPACE</span><h1>Interactive Trading Chart</h1><p>Forex • Stocks • Crypto • Indices • Commodities</p></div>
+    <div><span class="eyebrow">PRO MARKET WORKSPACE</span><h1>Interactive Trading Chart</h1><p>Forex • Stocks • Crypto • Indices • Commodities — full drawing tools, indicators and timeframes.</p></div>
     <div class="terminal-actions"><button class="neo-btn" id="chartFullscreen">Fullscreen</button></div>
   </div>
   <div class="market-switcher glass-card">
-    <button data-symbol="OANDA:EURUSD">EUR/USD</button><button data-symbol="OANDA:GBPUSD">GBP/USD</button><button data-symbol="OANDA:XAUUSD">XAU/USD</button><button data-symbol="BINANCE:BTCUSDT">BTC/USDT</button>
+    <button data-symbol="OANDA:EURUSD" class="active">EUR/USD</button><button data-symbol="OANDA:GBPUSD">GBP/USD</button><button data-symbol="OANDA:XAUUSD">XAU/USD</button><button data-symbol="BINANCE:BTCUSDT">BTC/USDT</button>
     <button data-symbol="NASDAQ:AAPL">AAPL</button><button data-symbol="NASDAQ:TSLA">TSLA</button><button data-symbol="SP:SPX">S&P 500</button>
   </div>
   <div class="terminal-shell glass-card" id="terminalShell">
-    <div class="terminal-loading" id="terminalLoading"><div class="loader-ring"></div><strong>Loading professional chart…</strong><span>Connecting to market chart provider</span></div>
+    <div class="terminal-loading" id="terminalLoading"><div class="loader-ring"></div><strong>Chart লোড হচ্ছে…</strong><span>ইন্টারনেট সংযোগ চেক করা হচ্ছে</span></div>
     <div class="tradingview-widget-container" id="tvChart" style="width:100%;height:100%;min-height:620px"><div class="tradingview-widget-container__widget" style="height:calc(100% - 32px);width:100%"></div></div>
-    <div class="terminal-fallback" id="terminalFallback"><strong>Chart provider is taking longer than expected.</strong><span>Refresh the page or choose another market.</span><button class="neo-btn" onclick="location.reload()">Retry</button></div>
+    <div class="terminal-fallback" id="terminalFallback">
+      <strong>Chart লোড হতে সমস্যা হচ্ছে।</strong>
+      <span>এটা সাধারণত ধীরগতির ইন্টারনেট বা কোনো অ্যাডব্লকার/ফায়ারওয়ালের কারণে হয়। নিচের যেকোনো একটা চেষ্টা করুন:</span>
+      <ul class="fallback-tips">
+        <li>ইন্টারনেট সংযোগ পরীক্ষা করুন</li>
+        <li>অ্যাডব্লকার (যদি থাকে) সাময়িকভাবে বন্ধ করুন</li>
+        <li>পেজ রিফ্রেশ করুন</li>
+      </ul>
+      <div class="fallback-actions">
+        <button class="neo-btn" onclick="location.reload()">আবার চেষ্টা করুন</button>
+        <a class="neo-btn" id="tvDirectLink" href="https://www.tradingview.com/chart/?symbol=OANDA:EURUSD" target="_blank" rel="noopener">TradingView-তে সরাসরি দেখুন</a>
+      </div>
+    </div>
   </div>
   <div class="terminal-info-grid">
     <div class="glass-card"><span>MARKET</span><strong id="selectedMarket">EUR/USD</strong></div>
@@ -27,18 +39,79 @@
 <script src="https://s3.tradingview.com/tv.js"></script>
 <script>
 (function(){
- const loading=document.getElementById('terminalLoading'), fallback=document.getElementById('terminalFallback'), shell=document.getElementById('terminalShell'), market=document.getElementById('selectedMarket');
+ const loading=document.getElementById('terminalLoading'), fallback=document.getElementById('terminalFallback'),
+       shell=document.getElementById('terminalShell'), market=document.getElementById('selectedMarket'),
+       directLink=document.getElementById('tvDirectLink');
  let symbol='OANDA:EURUSD';
- function mount(){
-   loading.style.display='flex'; fallback.style.display='none';
-   const root=document.getElementById('tvChart'); root.innerHTML='<div class="tradingview-widget-container__widget" style="height:calc(100% - 32px);width:100%"></div>';
-   if(!window.TradingView){ setTimeout(mount,1200); return; }
-   new TradingView.widget({autosize:true,symbol:symbol,interval:'60',timezone:'Etc/UTC',theme:'dark',style:'1',locale:'en',toolbar_bg:'#08131f',enable_publishing:false,hide_top_toolbar:false,hide_legend:false,hide_side_toolbar:false,allow_symbol_change:true,save_image:true,calendar:false,studies:['MA@tv-basicstudies','RSI@tv-basicstudies','MACD@tv-basicstudies'],container_id:'tvChart'});
-   setTimeout(()=>{loading.style.display='none';},2200); setTimeout(()=>{if(loading.style.display!=='none'){loading.style.display='none';fallback.style.display='flex';}},9000);
+ let scriptLoadFailed=false;
+ let widgetLoadAttempts=0;
+
+ function showFallback(){
+   loading.style.display='none';
+   fallback.style.display='flex';
  }
- document.querySelectorAll('[data-symbol]').forEach(b=>b.addEventListener('click',()=>{symbol=b.dataset.symbol; market.textContent=b.textContent; mount();}));
+
+ function mount(){
+   loading.style.display='flex';
+   loading.querySelector('strong').textContent='Chart লোড হচ্ছে…';
+   fallback.style.display='none';
+   const root=document.getElementById('tvChart');
+   root.innerHTML='<div class="tradingview-widget-container__widget" style="height:calc(100% - 32px);width:100%"></div>';
+
+   if(scriptLoadFailed){ showFallback(); return; }
+
+   widgetLoadAttempts++;
+   if(!window.TradingView){
+     if(widgetLoadAttempts > 12){ showFallback(); return; } // ~12s of retrying = give up gracefully
+     setTimeout(mount,1000);
+     return;
+   }
+   widgetLoadAttempts=0;
+
+   try{
+     const widget=new TradingView.widget({
+       autosize:true,symbol:symbol,interval:'60',timezone:'Etc/UTC',theme:'dark',style:'1',locale:'en',
+       toolbar_bg:'#08131f',enable_publishing:false,hide_top_toolbar:false,hide_legend:false,
+       hide_side_toolbar:false,allow_symbol_change:true,save_image:true,calendar:false,
+       studies:['MA@tv-basicstudies','RSI@tv-basicstudies','MACD@tv-basicstudies'],
+       container_id:'tvChart'
+     });
+     // আসল "ready" ইভেন্টের অপেক্ষা করা হচ্ছে, একটা fixed timer এর বদলে —
+     // এতে ধীরগতির সংযোগেও ভুলভাবে লোডিং বার্তা তাড়াতাড়ি সরে যাবে না
+     if(widget && typeof widget.onChartReady === 'function'){
+       widget.onChartReady(function(){ loading.style.display='none'; });
+     } else {
+       setTimeout(()=>{ loading.style.display='none'; }, 3000);
+     }
+     // চার্ট provider সত্যিই সাড়া না দিলে ১৮ সেকেন্ড পর সহায়ক বার্তা দেখানো হবে
+     setTimeout(()=>{ if(loading.style.display!=='none'){ showFallback(); } }, 18000);
+   }catch(e){
+     showFallback();
+   }
+ }
+
+ // tv.js স্ক্রিপ্ট নিজেই লোড হতে ব্যর্থ হলে (যেমন ব্লক করা থাকলে) দ্রুত এবং পরিষ্কার বার্তা দেখানো
+ const tvScript=document.querySelector('script[src*="s3.tradingview.com/tv.js"]');
+ if(tvScript){
+   tvScript.addEventListener('error', function(){ scriptLoadFailed=true; showFallback(); });
+ }
+
+ document.querySelectorAll('[data-symbol]').forEach(b=>b.addEventListener('click',()=>{
+   document.querySelectorAll('[data-symbol]').forEach(x=>x.classList.remove('active'));
+   b.classList.add('active');
+   symbol=b.dataset.symbol;
+   market.textContent=b.textContent;
+   if(directLink) directLink.href='https://www.tradingview.com/chart/?symbol='+encodeURIComponent(symbol);
+   mount();
+ }));
  document.getElementById('chartFullscreen')?.addEventListener('click',()=>{if(shell.requestFullscreen)shell.requestFullscreen();else shell.classList.toggle('is-fullscreen');});
  mount();
 })();
 </script>
+<style>
+.fallback-tips{margin:10px 0;padding-left:20px;font-size:13px;color:var(--muted,#9fb3c8);}
+.fallback-tips li{margin:4px 0;}
+.fallback-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;}
+.market-switcher button.active{background:var(--accent,#2dd4bf);color:#04140f;}
+</style>
 {% endblock %}

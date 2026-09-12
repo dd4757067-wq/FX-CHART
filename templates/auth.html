@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Login • FX CHART{% endblock %}
+{% block title %}{{ 'Create Account' if mode=='register' else 'Login' }} • FX CHART{% endblock %}
 {% block content %}
 <section class="auth-wrap">
   <div class="auth-orbit"></div>
@@ -7,18 +7,61 @@
     <div class="auth-logo">
       <img src="{{ url_for('static', filename='images/dfx-logo.jpg') }}" alt="DFX">
     </div>
+
+    {% if mode == 'register' %}
+    <div class="eyebrow">CREATE YOUR ACCOUNT</div>
+    <h1>Join FX CHART.</h1>
+    <p class="muted">Build your professional trading &amp; learning workspace.</p>
+
+    <form method="post" class="form-stack" id="registerForm">
+      <label>Username
+        <input name="username" autocomplete="username" minlength="3" required>
+      </label>
+      <label>Email
+        <input type="email" name="email" autocomplete="email" required>
+      </label>
+      <label>Phone (optional)
+        <input name="phone" autocomplete="tel">
+      </label>
+      <label>Password
+        <span class="password-wrap">
+          <input id="regPassword" type="password" name="password" autocomplete="new-password" minlength="8" required>
+          <button class="togglePwBtn" type="button">Show</button>
+        </span>
+      </label>
+      <label>Confirm Password
+        <span class="password-wrap">
+          <input id="regConfirm" type="password" name="confirm_password" autocomplete="new-password" minlength="8" required>
+          <button class="togglePwBtn" type="button">Show</button>
+        </span>
+      </label>
+      <p id="pwMismatch" style="display:none;color:#ff8796;font-size:12px;margin:0;">Passwords do not match.</p>
+      <button class="btn btn-primary btn-wide" type="submit">Create Account</button>
+    </form>
+
+    <div class="divider"><span>OR CONTINUE WITH</span></div>
+    <div class="social-grid">
+      <button class="social-btn" data-provider="google" type="button">G <span>Google / Gmail</span></button>
+      <button class="social-btn" data-provider="facebook" type="button">f <span>Facebook</span></button>
+      <button class="social-btn" data-provider="x" type="button">𝕏 <span>X / Twitter</span></button>
+    </div>
+    <p class="oauth-note">Social sign-up buttons are ready in the interface. Real Google/Facebook sign-up requires provider developer credentials; the site will not pretend a provider is connected until configured.</p>
+
+    <p class="auth-footer">Already have an account? <a href="{{ url_for('login') }}">Login</a></p>
+
+    {% else %}
     <div class="eyebrow">SECURE TRADING ACCESS</div>
     <h1>Welcome back.</h1>
     <p class="muted">Enter your FX CHART account and continue your learning workspace.</p>
 
     <form method="post" class="form-stack">
-      <label>Email / Username
-        <input name="username" autocomplete="username" required>
+      <label>Email / Username / Phone
+        <input name="identity" autocomplete="username" required>
       </label>
       <label>Password
         <span class="password-wrap">
           <input id="loginPassword" type="password" name="password" autocomplete="current-password" required>
-          <button id="togglePassword" type="button">Show</button>
+          <button class="togglePwBtn" type="button">Show</button>
         </span>
       </label>
       <button class="btn btn-primary btn-wide" type="submit">Enter FX CHART</button>
@@ -33,6 +76,36 @@
     <p class="oauth-note">Social login buttons are ready in the interface. Real OAuth sign-in requires the corresponding provider app credentials and callback URLs; the site will not pretend a provider is connected until configured.</p>
 
     <p class="auth-footer">New here? <a href="{{ url_for('register') }}">Create an account</a></p>
+    {% endif %}
   </div>
 </section>
+
+<script>
+document.querySelectorAll('.togglePwBtn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var inp = btn.previousElementSibling;
+    if(inp.type === 'password'){ inp.type='text'; btn.textContent='Hide'; }
+    else { inp.type='password'; btn.textContent='Show'; }
+  });
+});
+document.querySelectorAll('.social-btn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    alert('Social login/sign-up needs Google/Facebook developer credentials connected on the server first. This is not active yet.');
+  });
+});
+var regForm = document.getElementById('registerForm');
+if(regForm){
+  regForm.addEventListener('submit', function(e){
+    var p = document.getElementById('regPassword').value;
+    var c = document.getElementById('regConfirm').value;
+    var msg = document.getElementById('pwMismatch');
+    if(p !== c){
+      e.preventDefault();
+      msg.style.display = 'block';
+    } else {
+      msg.style.display = 'none';
+    }
+  });
+}
+</script>
 {% endblock %}

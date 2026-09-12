@@ -1,7 +1,8 @@
 {% extends "base.html" %}
 {% block title %}FX CHART • Professional Trading Education{% endblock %}
 {% block content %}
-<section class="hero full-bleed">
+<section class="hero hero-bgchart full-bleed">
+  <div class="hero-candle-bg" aria-hidden="true" id="heroCandleBg"></div>
   <div class="hero-copy">
     <div class="eyebrow">FX CHART // PROFESSIONAL MARKET EDUCATION</div>
     <h1>Trade with <span>clarity.</span><br>Learn with structure.</h1>
@@ -10,19 +11,6 @@
       <a class="btn btn-primary" href="{{ url_for('chart') }}">Open Market Chart</a>
       <a class="btn btn-ghost" href="{{ url_for('learning') }}">Explore Learning</a>
     </div>
-  </div>
-  <div class="hero-terminal glass-card">
-    <div class="terminal-top"><span>MARKET FLOW</span><span class="pulse-dot">●</span></div>
-    <div class="hero-chart">
-      <svg viewBox="0 0 900 280" preserveAspectRatio="none" aria-label="Animated market chart">
-        <polyline class="chart-glow" points="0,220 65,205 115,215 175,160 230,178 285,125 340,145 395,92 455,112 510,74 565,105 620,55 675,88 735,42 800,70 900,28"/>
-        <polyline class="chart-main" points="0,220 65,205 115,215 175,160 230,178 285,125 340,145 395,92 455,112 510,74 565,105 620,55 675,88 735,42 800,70 900,28"/>
-      </svg>
-      <div class="terminal-candles">
-        {% for i in range(16) %}<span class="mini-candle mc{{i%6}}" style="height:{{24+(i*11)%100}}px;animation-delay:-{{i*0.23}}s"></span>{% endfor %}
-      </div>
-    </div>
-    <div class="terminal-footer"><span>FOREX</span><span>CRYPTO</span><span>STOCKS</span><span>GOLD</span><span>INDICES</span></div>
   </div>
 </section>
 
@@ -56,9 +44,84 @@
   </div>
 </section>
 
+<section class="section-block about-section">
+  <div class="section-heading"><div><div class="eyebrow">ABOUT THIS PLATFORM</div><h2>What works today, and what's still coming.</h2></div></div>
+  <div class="about-grid">
+    <div class="glass-card about-col">
+      <h3>✅ Available now</h3>
+      <ul>
+        <li>Account creation &amp; login (email / username / phone)</li>
+        <li>Live interactive market chart (Forex, Crypto, Stocks, Gold, Indices)</li>
+        <li>Candlestick, chart pattern, SMC and multi-timeframe learning modules</li>
+        <li>Trading journal to log and review your own trades</li>
+        <li>Risk &amp; position-size calculator</li>
+        <li>Community posts, likes and comments</li>
+        <li>Market news feed</li>
+        <li>Personal dashboard with your activity overview</li>
+        <li>Profile with photo upload</li>
+      </ul>
+    </div>
+    <div class="glass-card about-col">
+      <h3>🚧 Not active yet</h3>
+      <ul>
+        <li>Google / Facebook one-tap login — needs provider developer credentials before it can go live</li>
+        <li>Paid subscription automatic billing — requests are currently reviewed manually</li>
+        <li>Real broker order placement — the platform is educational and does not execute live trades</li>
+      </ul>
+      <p class="muted" style="margin-top:12px;font-size:13px;">This list is kept up to date as features ship, so you always know exactly what to expect.</p>
+    </div>
+  </div>
+</section>
+
 <footer class="site-footer">
   <div><b>FX CHART</b><p>Professional trading education & market analysis.</p></div>
   <div><span>Contact</span><a href="mailto:dd4757067@gmail.com">dd4757067@gmail.com</a></div>
   <div><span>Focus</span><p>Forex • Crypto • Stocks • Gold • Indices</p></div>
 </footer>
+{% endblock %}
+{% block scripts %}
+<script>
+// পুরো hero background জুড়ে একটা লাল/সবুজ candlestick chart তৈরি করা হচ্ছে,
+// professional trading platform-এর মতো দেখতে — লেখার পেছনে, হালকা opacity-তে।
+(function(){
+  const wrap = document.getElementById('heroCandleBg');
+  if(!wrap) return;
+  const N = 60;
+  let html = '';
+  let last = 50;
+  for(let i=0;i<N;i++){
+    const change = (Math.random()-0.48) * 18;
+    const open = last;
+    const close = Math.max(5, Math.min(95, open + change));
+    last = close;
+    const high = Math.max(open,close) + Math.random()*6;
+    const low = Math.min(open,close) - Math.random()*6;
+    const bull = close >= open;
+    const bodyTop = 100 - Math.max(open,close);
+    const bodyH = Math.max(1.5, Math.abs(close-open));
+    const wickTop = 100 - high;
+    const wickH = high - low;
+    html += `<div class="hcandle ${bull?'bull':'bear'}" style="left:${(i/N)*100}%;animation-delay:-${(i*0.35).toFixed(2)}s">
+      <span class="hwick" style="top:${wickTop}%;height:${wickH}%"></span>
+      <span class="hbody" style="top:${bodyTop}%;height:${bodyH}%"></span>
+    </div>`;
+  }
+  wrap.innerHTML = html;
+})();
+</script>
+<style>
+.hero-bgchart{position:relative;overflow:hidden}
+.hero-candle-bg{position:absolute;inset:0;z-index:0;opacity:.32;pointer-events:none}
+.hero-bgchart .hero-copy{position:relative;z-index:1}
+.hcandle{position:absolute;bottom:0;width:1.4%;height:100%}
+.hwick{position:absolute;left:50%;width:1px;background:currentColor;transform:translateX(-50%)}
+.hbody{position:absolute;left:0;width:100%;border-radius:1px;background:currentColor}
+.hcandle.bull{color:#2fd67a;animation:candleFloat 3.6s ease-in-out infinite alternate}
+.hcandle.bear{color:#ff5d6c;animation:candleFloat 3.6s ease-in-out infinite alternate}
+@media (max-width:900px){.hero-candle-bg{opacity:.22}}
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:18px}
+.about-col ul{margin:10px 0 0;padding-left:20px;line-height:1.9;color:#c7d6de}
+.about-col h3{margin:0}
+@media (max-width:820px){.about-grid{grid-template-columns:1fr}}
+</style>
 {% endblock %}
